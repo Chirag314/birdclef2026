@@ -1,40 +1,124 @@
-cat > .gitignore <<'EOF'
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.so
-.venv/
-venv/
-env/
-
-# Jupyter
-.ipynb_checkpoints/
-
+# =========================
 # OS / Editor
+# =========================
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
 
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# =========================
 # Logs
+# =========================
 *.log
+logs/
+mlruns/
+wandb/
+tensorboard/
+runs/
 
+# =========================
+# Secrets / credentials
+# =========================
+.env
+.env.*
+*.env
+kaggle.json
+*credentials*.json
+secrets.json
+*.pem
+*.key
+*.crt
+
+# =========================
+# Local caches / temp
+# =========================
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tmp/
+temp/
+*.tmp
+
+# =========================
 # Data
+# Keep repo light. Do not push raw competition data.
+# =========================
 data/raw/
 data/processed/
+data/interim/
+data/external/
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.joblib
+*.pkl
 
+# =========================
+# Audio files
+# Usually too large for Git repos
+# =========================
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+*.aac
+
+# =========================
 # Artifacts
+# Large experiment outputs should stay local
+# =========================
 artifacts/checkpoints/
 artifacts/oof/
 artifacts/logs/
 artifacts/exports/
 
-# Kaggle / secrets
-kaggle.json
-*.pem
-*.key
-.env
-.env.*
-EOF
+# =========================
+# Kaggle notebook generated files
+# =========================
+submission.csv
+oof.csv
+folds_debug.csv
+profile.html
+
+# =========================
+# Optional: keep placeholder dirs if needed
+# =========================
+!.gitkeep
