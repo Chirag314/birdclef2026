@@ -1,0 +1,40 @@
+cat > .gitignore <<'EOF'
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Data
+data/raw/
+data/processed/
+
+# Artifacts
+artifacts/checkpoints/
+artifacts/oof/
+artifacts/logs/
+artifacts/exports/
+
+# Kaggle / secrets
+kaggle.json
+*.pem
+*.key
+.env
+.env.*
+EOF
