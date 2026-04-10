@@ -1,0 +1,49 @@
+# base.yaml — shared defaults for all experiments
+# All other configs inherit or override these values.
+# Do not put experiment-specific values here.
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+paths:
+  raw_data:       /data/birdclef_2026/data/raw/birdclef-2026
+  train_audio:    /data/birdclef_2026/data/raw/birdclef-2026/train_audio
+  train_soundscapes: /data/birdclef_2026/data/raw/birdclef-2026/train_soundscapes
+  train_csv:      /data/birdclef_2026/data/raw/birdclef-2026/train.csv
+  taxonomy_csv:   /data/birdclef_2026/data/raw/birdclef-2026/taxonomy.csv
+  soundscape_labels_csv: /data/birdclef_2026/data/raw/birdclef-2026/train_soundscapes_labels.csv
+  folds_csv:      /data/birdclef2026/data/folds.csv
+  processed:      /data/birdclef2026/data/processed
+  artifacts:      /data/birdclef2026/artifacts
+
+# ---------------------------------------------------------------------------
+# Competition target
+# ---------------------------------------------------------------------------
+competition:
+  name: birdclef-2026
+  n_classes: 234              # total species in taxonomy.csv / sample_submission
+  # Evaluation: macro-averaged ROC-AUC, skipping classes with no true positives
+  metric: macro_roc_auc
+  window_seconds: 5           # prediction unit is a 5-second window
+  row_id_suffix: end_second   # row_id = {filename_stem}_{end_second}
+
+# ---------------------------------------------------------------------------
+# Audio
+# ---------------------------------------------------------------------------
+audio:
+  sample_rate: 32000          # standard for BirdCLEF; soundscapes recorded at 32kHz
+  duration: 5                 # seconds per window at inference
+  n_fft: 1024
+  hop_length: 320             # 32000 / 320 = 100 frames/sec → 500 frames per 5-sec clip
+  n_mels: 128
+  fmin: 20                    # Hz — captures low-frequency frog/mammal calls
+  fmax: 16000                 # Hz — Nyquist for 32kHz
+  power: 2.0                  # power spectrogram (2.0 = power, 1.0 = magnitude)
+  top_db: 80.0                # dynamic range for log mel (librosa default)
+  # Note: insects and frogs have very different frequency ranges than birds.
+  # fmin=20 and fmax=16000 keeps full bandwidth — do not narrow to bird-only range.
+
+# ---------------------------------------------------------------------------
+# Reproducibility
+# ---------------------------------------------------------------------------
+seed: 42

@@ -1,0 +1,52 @@
+# folds.yaml — fold generation strategy
+# Run: python scripts/make_folds.py
+# Output: data/folds.csv
+
+# ---------------------------------------------------------------------------
+# Strategy
+# ---------------------------------------------------------------------------
+strategy: site_stratified
+# Options:
+#   site_stratified   — group by deployment site; prevents site leakage across folds
+#   species_stratified — stratify by species frequency only (leaks site, risky)
+#   random            — fully random (leaks everything, only for quick sanity checks)
+#
+# Rationale for site_stratified:
+#   Train soundscapes come from 23 known deployment sites (S01–S23).
+#   If a site appears in both train and val fold, the model can memorize
+#   site-specific background noise and acoustic environment. Since test sites
+#   are unknown/potentially new, site-held-out validation is more realistic.
+#
+# Risk: small number of sites (23) means 5-fold leaves ~4-5 sites per val fold.
+#       Class distribution per site may be uneven — check after fold generation.
+
+n_folds: 5
+fold_column: fold           # column name written to folds.csv
+
+# ---------------------------------------------------------------------------
+# Grouping
+# ---------------------------------------------------------------------------
+# Site code is parsed from soundscape filename: BC2026_Train_NNNN_SXX_...
+# For individual clips in train.csv, site is unknown — assign by geographic
+# proximity to nearest soundscape site, or treat all clips as a separate group.
+groupby_column: site_code
+
+# For train clips (XC/iNat), they have no site code.
+# Options:
+#   exclude   — only use soundscapes for fold assignment (clips used in all folds)
+#   geo_assign — assign each clip to nearest soundscape site by lat/lon
+clip_site_assignment: geo_assign
+
+# ---------------------------------------------------------------------------
+# Minimum samples per class per fold
+# ---------------------------------------------------------------------------
+min_samples_per_class: 1
+# If a class has fewer samples than this in a fold, log a warning.
+# Classes with 0 samples in val fold will produce NaN AUC — these are excluded
+# from the macro average (same as the test metric behavior).
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+output_path: /data/birdclef2026/data/folds.csv
+# Columns written: filename, primary_label, fold, site_code, source (clip/soundscape)

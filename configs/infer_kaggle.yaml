@@ -1,0 +1,82 @@
+# infer_kaggle.yaml — Kaggle inference configuration
+# Used inside kaggle_notebook/inference.py during submission.
+# Hard constraint: CPU-only, 90-minute total runtime.
+
+# ---------------------------------------------------------------------------
+# Runtime environment
+# ---------------------------------------------------------------------------
+runtime:
+  device: cpu
+  time_limit_seconds: 5100     # 90 min = 5400s; stop early at 5100s to allow cleanup
+  num_threads: 4               # torch.set_num_threads — tune based on Kaggle CPU count
+  # Kaggle typically provides 4 CPU cores on notebook instances
+
+# ---------------------------------------------------------------------------
+# Paths (Kaggle dataset mount points — set these when packaging)
+# ---------------------------------------------------------------------------
+paths:
+  model_dir: /kaggle/input/birdclef2026-model     # exported artifact dataset
+  test_soundscapes: /kaggle/input/birdclef-2026/test_soundscapes
+  taxonomy_csv: /kaggle/input/birdclef-2026/taxonomy.csv
+  sample_submission: /kaggle/input/birdclef-2026/sample_submission.csv
+  output_submission: /kaggle/working/submission.csv
+
+# ---------------------------------------------------------------------------
+# Model
+# ---------------------------------------------------------------------------
+model:
+  checkpoint: best_model.pt    # filename inside model_dir
+  config: train_config.yaml    # train config saved alongside checkpoint
+  format: pytorch              # options: pytorch | onnx
+  # ONNX export is preferred for CPU speed — set format: onnx if exported
+
+# ---------------------------------------------------------------------------
+# Inference
+# ---------------------------------------------------------------------------
+inference:
+  window_seconds: 5            # must match competition scoring unit
+  hop_seconds: 5               # no overlap at inference (non-overlapping windows)
+                               # can try 2.5s overlap but costs 2x compute
+  batch_size: 32               # tune for CPU memory vs throughput trade-off
+                               # larger batches = better CPU utilization
+  amp: false                   # no mixed precision on CPU (no benefit)
+
+# ---------------------------------------------------------------------------
+# Audio preprocessing
+# ---------------------------------------------------------------------------
+# Must exactly match training preprocessing — any mismatch degrades performance.
+audio:
+  sample_rate: 32000
+  duration: 5
+  n_fft: 1024
+  hop_length: 320
+  n_mels: 128
+  fmin: 20
+  fmax: 16000
+  power: 2.0
+  top_db: 80.0
+
+# ---------------------------------------------------------------------------
+# Post-processing
+# ---------------------------------------------------------------------------
+postprocess:
+  # Raw sigmoid outputs are used directly for submission (no thresholding).
+  # ROC-AUC metric does not require thresholding.
+  apply_sigmoid: true
+  clip_min: 0.0
+  clip_max: 1.0
+  # Optional: per-class score scaling to correct for training distribution bias
+  # Disable unless calibration analysis shows it helps local CV.
+  apply_class_scaling: false
+  class_scale_path: null
+
+# ---------------------------------------------------------------------------
+# Submission
+# ---------------------------------------------------------------------------
+submission:
+  # Column order must match sample_submission.csv exactly.
+  # Use taxonomy.csv as the canonical class list — do not hardcode column order.
+  use_taxonomy_order: true
+  fill_missing_windows: true    # if a soundscape is shorter than expected, fill remaining
+                                # windows with prior probability (1/234 ≈ 0.0043)
+  fill_value: 0.004273504273504274  # 1/234 — matches sample submission placeholder values

@@ -1,0 +1,156 @@
+# train.yaml — training configuration
+# Run: python scripts/train.py --config configs/train.yaml
+# Inherits defaults from base.yaml — override only what differs.
+
+# ---------------------------------------------------------------------------
+# Experiment identity
+# ---------------------------------------------------------------------------
+experiment_name: baseline_v1
+# Change this for each new experiment. Used for checkpoint and log naming.
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+data:
+  use_train_clips: true         # use individual XC/iNat clip recordings
+  use_train_soundscapes: true   # use labeled train soundscapes (66 files, 1478 windows)
+  use_unlabeled_soundscapes: false  # semi-supervised use of remaining 10,592 soundscapes
+                                    # set true only after a reliable pseudo-label model exists
+  min_rating: 0.0               # include all clips regardless of quality rating
+                                # set to e.g. 1.0 to filter unrated clips (rating=0)
+                                # NOTE: 36% of clips have rating=0 — investigate before filtering
+  secondary_labels: ignore      # options: ignore | soft_label | exclude_from_negatives
+                                # 12.3% of clips have secondary labels
+  window_overlap: 0.0           # overlap fraction between windows when slicing clips (0–<1)
+  clip_max_windows: null        # max windows to sample per clip (null = use all)
+
+  # Soundscape window assignment
+  # Labels in train_soundscapes_labels.csv are at 5-sec resolution.
+  # These are strong labels — use directly as positives/negatives.
+  soundscape_label_as_strong: true
+
+# ---------------------------------------------------------------------------
+# Model
+# ---------------------------------------------------------------------------
+model:
+  backbone: efficientnet_b0     # starting point: small enough for CPU inference
+                                # alternatives: efficientnet_b1, tf_efficientnetv2_s,
+                                #               eca_nfnet_l0, convnext_tiny
+                                # Do NOT use large ViT/ConvNeXt-L — CPU inference too slow
+  pretrained: true              # ImageNet pretrained weights
+  in_channels: 1                # single-channel log-mel spectrogram
+  head: linear                  # simple linear head over pooled features
+  pool: gem                     # GeM pooling — standard for audio competition
+  gem_p: 3.0
+  dropout: 0.2
+
+# ---------------------------------------------------------------------------
+# Input dimensions
+# ---------------------------------------------------------------------------
+# Derived from base.yaml audio settings:
+# sample_rate=32000, duration=5, hop=320 → 500 time frames
+# n_mels=128
+# Input shape: (batch, 1, 128, 500)
+
+# ---------------------------------------------------------------------------
+# Training loop
+# ---------------------------------------------------------------------------
+training:
+  epochs: 30
+  batch_size: 64
+  gradient_accumulation: 1
+  mixed_precision: true         # fp16 training — requires GPU
+  num_workers: 4
+  pin_memory: true
+
+# ---------------------------------------------------------------------------
+# Loss
+# ---------------------------------------------------------------------------
+loss:
+  name: bce_with_logits         # binary cross-entropy (multi-label)
+  # alternatives: focal_loss, asymmetric_loss
+  # Do not use softmax CE — this is multi-label, not single-label
+  pos_weight: null              # set to class frequency inverse if class imbalance is severe
+                                # compute from training fold, not globally
+  label_smoothing: 0.0          # start at 0; add only if validation shows overconfidence
+
+# ---------------------------------------------------------------------------
+# Optimizer
+# ---------------------------------------------------------------------------
+optimizer:
+  name: adamw
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  backbone_lr_multiplier: 0.1  # lower LR for pretrained backbone vs head
+
+# ---------------------------------------------------------------------------
+# Scheduler
+# ---------------------------------------------------------------------------
+scheduler:
+  name: cosine_with_warmup
+  warmup_epochs: 2
+  min_lr: 1.0e-6
+
+# ---------------------------------------------------------------------------
+# Augmentation (audio / spectrogram level)
+# ---------------------------------------------------------------------------
+# These are placeholders — augmentation decisions must come from EDA.
+# Do not enable blindly. Each augmentation is OFF by default.
+augmentation:
+  # Time-frequency masking (SpecAugment)
+  spec_augment:
+    enabled: false
+    freq_mask_param: 20
+    time_mask_param: 50
+    n_freq_masks: 2
+    n_time_masks: 2
+
+  # Mixup between clips — can hurt rare classes if mixed with dominant species
+  mixup:
+    enabled: false
+    alpha: 0.4
+
+  # Background noise addition from unlabeled soundscapes
+  background_noise:
+    enabled: false
+    snr_db_range: [6, 24]
+
+  # Pitch shift — useful if geographic/habitat variation affects pitch
+  pitch_shift:
+    enabled: false
+    semitones_range: [-2, 2]
+
+  # Time stretch
+  time_stretch:
+    enabled: false
+    rate_range: [0.8, 1.2]
+
+  # Gaussian noise
+  gaussian_noise:
+    enabled: false
+    std_range: [0.001, 0.01]
+
+# ---------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------
+validation:
+  metric: macro_roc_auc         # matches competition metric
+  skip_zero_positive_classes: true  # mirrors competition scoring behavior
+  eval_every_n_epochs: 1
+  early_stopping_patience: 5
+
+# ---------------------------------------------------------------------------
+# Checkpointing
+# ---------------------------------------------------------------------------
+checkpoint:
+  save_dir: /data/birdclef2026/artifacts/checkpoints
+  save_top_k: 1                 # keep only the best checkpoint per experiment
+  monitor: val_macro_roc_auc
+  mode: max
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logging:
+  log_dir: /data/birdclef2026/artifacts/logs
+  log_every_n_steps: 50
