@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BirdCLEF 2026 — Modeling Report</title>
+<style>
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #2c3e50;
+    background: #f5f6fa;
+}
+
+.page-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* Cover */
+.cover {
+    background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+    color: white;
+    padding: 60px 48px 48px;
+}
+.cover h1 {
+    font-size: 2.4em;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: white;
+    border: none;
+    margin-bottom: 6px;
+    padding: 0;
+}
+.cover .subtitle {
+    font-size: 1.15em;
+    opacity: 0.85;
+    margin-bottom: 4px;
+}
+.cover .date { font-size: 0.9em; opacity: 0.65; margin-top: 8px; }
+.cover-divider {
+    border: none;
+    border-top: 2px solid rgba(255,255,255,0.35);
+    margin: 20px 0;
+    width: 200px;
+}
+.cover-stats {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.cover-stat {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    padding: 10px 16px;
+    flex: 1 1 240px;
+}
+.cover-stat .label { font-size: 0.78em; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
+.cover-stat .value { font-size: 0.95em; font-weight: 600; margin-top: 2px; }
+
+/* Navigation */
+nav {
+    background: #1a5276;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+nav a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    padding: 10px 14px;
+    font-size: 0.82em;
+    font-weight: 500;
+    display: inline-block;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+nav a:hover { background: rgba(255,255,255,0.1); color: white; }
+
+/* Main content */
+.content { padding: 32px 48px 60px; }
+
+.section {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #ecf0f1;
+}
+.section:last-child { border-bottom: none; }
+
+h1 {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #1a5276;
+    margin: 32px 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #2980b9;
+}
+h2 {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 24px 0 8px;
+}
+h3 {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #555;
+    margin: 16px 0 6px;
+    font-style: italic;
+}
+p { margin-bottom: 10px; }
+
+ul { margin: 8px 0 12px 20px; }
+li { margin-bottom: 5px; line-height: 1.55; }
+
+/* Tables */
+.table-wrap {
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88em;
+}
+thead tr {
+    background: #1a5276;
+    color: white;
+}
+thead th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e8ecef;
+    vertical-align: top;
+    line-height: 1.5;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr.alt td { background: #f7f9fc; }
+tbody tr:hover td { background: #eaf4fb; }
+
+/* Priority row colors */
+.row-critical td { background: #fdf0f0 !important; }
+.row-high td     { background: #fef9e7 !important; }
+.row-medium td   { background: #eaf4fb !important; }
+.row-green td    { background: #eafaf1 !important; }
+.row-excluded td { background: #fdf0f0 !important; }
+
+/* Column utilities */
+.col-num   { width: 36px; text-align: center; font-weight: 700; white-space: nowrap; }
+.col-pri   { width: 110px; white-space: nowrap; font-weight: 700; }
+.col-tag   { width: 100px; white-space: nowrap; font-weight: 700; }
+.col-sev   { width: 90px; white-space: nowrap; font-weight: 700; }
+
+/* Priority labels */
+.pri-p1     { color: #c0392b; }
+.pri-p2     { color: #e67e22; }
+.pri-p3     { color: #2980b9; }
+.pri-crit   { color: #c0392b; font-weight: 700; }
+.pri-high   { color: #e67e22; font-weight: 700; }
+.pri-medium { color: #2980b9; }
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Info boxes */
+.infobox { font-size: 0.9em; }
+.infobox strong { display: block; margin-bottom: 4px; }
+
+/* Key stats grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+.stat-card {
+    background: #f7f9fc;
+    border: 1px solid #d5e8f5;
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+.stat-card .s-label { font-size: 0.75em; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .s-value { font-size: 1em; font-weight: 700; color: #1a5276; margin-top: 2px; }
+
+/* TOC */
+.toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    columns: 2;
+    column-gap: 24px;
+}
+.toc-list li {
+    padding: 5px 0;
+    border-bottom: 1px dotted #ddd;
+    margin-bottom: 0;
+}
+.toc-list a {
+    color: #2980b9;
+    text-decoration: none;
+    font-size: 0.92em;
+}
+.toc-list a:hover { text-decoration: underline; }
+.toc-num { color: #aaa; margin-right: 6px; font-size: 0.85em; }
+
+/* Summary box */
+.summary-box {
+    background: linear-gradient(135deg, #eaf4fb, #f0faf5);
+    border: 1px solid #aed6f1;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 24px 0 0;
+}
+.summary-box h3 { color: #1a5276; margin-top: 0; font-size: 1em; }
+
+/* Footer */
+footer {
+    background: #2c3e50;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    font-size: 0.78em;
+    padding: 14px;
+}
+
+code {
+    background: #f4f4f4;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+@media print {
+    nav { display: none; }
+    .page-wrap { box-shadow: none; }
+    .cover { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+
+<div class="cover">
+  <h1>BirdCLEF 2026</h1>
+  <div class="subtitle">Modeling Hypotheses &amp; Strategy Report</div>
+  <div class="subtitle">Synthesis of EDA Sections A–I &nbsp;|&nbsp; Phase 6 Deliverable</div>
+  <hr class="cover-divider">
+  <div class="cover-stats">
+    <div class="cover-stat"><div class="label">Target Species</div>
+      <div class="value">234 (162 birds · 35 frogs · 28 insects · 8 mammals · 1 reptile)</div></div>
+    <div class="cover-stat"><div class="label">Training Clips</div>
+      <div class="value">35,549 — 206 of 234 species have clips</div></div>
+    <div class="cover-stat"><div class="label">Zero-Clip Species</div>
+      <div class="value">28 — supervised only via 66 labeled soundscape windows</div></div>
+    <div class="cover-stat"><div class="label">Train Soundscapes</div>
+      <div class="value">10,658 total — only 0.6% have expert window labels</div></div>
+    <div class="cover-stat"><div class="label">Evaluation Metric</div>
+      <div class="value">Macro-averaged ROC-AUC (skip classes absent in test)</div></div>
+    <div class="cover-stat"><div class="label">Inference Constraint</div>
+      <div class="value">CPU-only Kaggle notebook · 90-minute hard limit</div></div>
+    <div class="cover-stat"><div class="label">Domain Gap</div>
+      <div class="value">Global XC/iNat clips → Pantanal passive ARU recorders (SEVERE)</div></div>
+    <div class="cover-stat"><div class="label">Deadline</div>
+      <div class="value">June 3, 2026 — ~8 weeks remaining</div></div>
+  </div>
+</div>
+
+
+<nav>
+  <a href="#s1">§1 Structure</a>
+  <a href="#s2">§2 Hypotheses</a>
+  <a href="#s3">§3 Pipeline</a>
+  <a href="#s4">§4 Validation</a>
+  <a href="#s5">§5 Augmentation</a>
+  <a href="#s6">§6 Prior Data</a>
+  <a href="#s7">§7 Risk Register</a>
+  <a href="#s8">§8 Experiment Plan</a>
+  <a href="#s9">§9 Open Questions</a>
+</nav>
+
+<div class="content">
+<h1>Contents</h1>
+
+<ul class="toc-list">
+  <li><a href="#s1"><span class="toc-num">§1</span> Competition Structure — What the Model Must Actually Do</a></li>
+  <li><a href="#s2"><span class="toc-num">§2</span> Ranked Modeling Hypotheses (Top 12)</a></li>
+  <li><a href="#s3"><span class="toc-num">§3</span> Data Pipeline Architecture</a></li>
+  <li><a href="#s4"><span class="toc-num">§4</span> Validation Strategy</a></li>
+  <li><a href="#s5"><span class="toc-num">§5</span> Augmentation Plan (Evidence-Based)</a></li>
+  <li><a href="#s6"><span class="toc-num">§6</span> Prior Data Decision</a></li>
+  <li><a href="#s7"><span class="toc-num">§7</span> Risk Register</a></li>
+  <li><a href="#s8"><span class="toc-num">§8</span> Phased Experiment Plan</a></li>
+  <li><a href="#s9"><span class="toc-num">§9</span> Open Questions &amp; Gaps</a></li>
+</ul>
+
+<h1 id="s1">§1 — Competition Structure: What the Model Must Actually Do</h1>
+<p>Before any modeling hypothesis can be tested, the prediction contract must be understood precisely. Misunderstanding the supervision unit vs. the scoring unit is the most common source of wasted effort in BirdCLEF-style competitions.</p>
+<h2>1.1 — Prediction Contract (Train vs. Score)</h2>
+<div class="table-wrap"><table><thead><tr><th>Axis</th><th>Training Side</th><th>Scoring Side</th></tr></thead><tbody><tr class=""><td>Unit</td><td>Whole clip (3–120 s)</td><td>5-second window</td></tr><tr class="alt"><td>Label type</td><td>Clip-level primary + secondary</td><td>Per-window presence / absence</td></tr><tr class=""><td>Label count</td><td>Mostly 1; 12.3% have secondary labels</td><td>3–5 species per window (EDA §F)</td></tr><tr class="alt"><td>Supervision</td><td>35K clips + 1,478 expert soundscape windows</td><td>Hidden test soundscapes</td></tr><tr class=""><td>Geography</td><td>Global (lat −55 to +70)</td><td>Pantanal, Brazil only</td></tr><tr class="alt"><td>Recorder</td><td>Close-mic / phone / field recorder</td><td>Passive ARU deployment</td></tr></tbody></table></div>
+<div class="infobox" style="border-left:4px solid #2980b9;background:#eaf4fb;padding:12px 16px;margin:12px 0;border-radius:4px"><strong>Core tension:</strong> The model is trained on close-mic clips with whole-clip labels and must generalize to passive soundscape recorders predicting at 5-second resolution. This is a <em>three-way mismatch</em>: recording device, label granularity, and geographic domain. Every design decision must close at least one of these gaps.</div>
+<h2>1.2 — Metric Implications</h2>
+<ul><li><strong>Macro ROC-AUC</strong> — each of 234 classes gets equal weight regardless of frequency. A species appearing in 2 test windows matters as much as one appearing in 2,000.</li><li>Metric is <strong>threshold-free</strong> — calibration of absolute probability values does not matter. Relative ranking within each class is what counts.</li><li><strong>Classes absent in test are skipped</strong> — but you cannot know which ones in advance. Do not deprioritize rare species.</li><li>Improving common-species AUC by sacrificing rare-species AUC is net-neutral at best and net-negative under macro averaging.</li><li>This metric strongly rewards models that <em>discriminate</em> within rare classes, not just models that avoid false positives overall.</li></ul>
+<h2>1.3 — CPU Inference Constraint (90-min, no GPU)</h2>
+<ul><li>Hard limit on model size. EfficientNet-B4 and below are feasible; B6+ and large ViTs will time out.</li><li>Mel spectrogram extraction must be batched — per-window librosa calls add ~2× overhead.</li><li>ONNX export or <code>torch.compile</code> will likely be necessary for competitive inference speed.</li><li>Top BC2024/2025 solutions used EfficientNet-B0 to B2 or small ConvNext variants with ONNX export.</li><li>Plan model architecture around inference budget first, then optimize within that envelope.</li></ul>
+<h1 id="s2">§2 — Ranked Modeling Hypotheses (Top 12)</h1>
+<p>Each hypothesis is grounded in a specific EDA finding. Priority is assigned by <strong>expected AUC impact × implementation feasibility</strong>. Every hypothesis includes: the claim, the EDA evidence, the expected impact, and the test approach.</p>
+<h2>Tier 1 — Critical (must test first)</h2>
+<div class="infobox" style="border-left:4px solid #c0392b;background:#fdf0f0;padding:12px 16px;margin:12px 0;border-radius:4px">These four hypotheses address the dominant risks identified in EDA. None of the other hypotheses should be tested before these are validated on OOF CV.</div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Hypothesis</th><th>EDA Evidence</th><th>Expected Impact</th><th>How to Test</th></tr></thead><tbody><tr class=""><td class="col-num"><span class="pri-crit">H1</span></td><td><strong>Background mixing with unlabeled Pantanal soundscapes closes the clip→soundscape domain gap more than any other single intervention.</strong></td><td>Section G5, F1: clip-to-soundscape domain gap is the primary risk. 10,592 unlabeled soundscapes provide real Pantanal noise backgrounds at no label cost.</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Large</span></td><td>Baseline OOF AUC vs. +background mixing. Expected: +0.04–0.08 AUC. Monitor per-taxon AUC change.</td></tr><tr class="alt"><td class="col-num"><span class="pri-crit">H2</span></td><td><strong>Waveform mixup (λ~Beta(0.4,0.4)) with soft multi-label targets teaches the model co-presence of 3–5 species, matching the test window structure.</strong></td><td>Section F2, C: 87% of expert-labeled windows have 2+ co-active species. Training clips are mostly single-label. This gap hurts multi-label discrimination.</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">High</span></td><td>Baseline OOF AUC vs. +waveform mixup. Expected: +0.02–0.05. Check that rare-class AUC does not drop.</td></tr><tr class=""><td class="col-num"><span class="pri-crit">H3</span></td><td><strong>Energy gating — discarding silent 5s windows as unlabeled — reduces label noise more than any augmentation.</strong></td><td>Section E3, F3: 14% mean silence ratio; some clips 90% silent. Assigning clip-level labels to silent windows creates systematic false positives.</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">High</span></td><td>Train with and without energy gating. Compare OOF precision on silent-window positives. Threshold sweep: −40, −45, −50 dBFS.</td></tr><tr class="alt"><td class="col-num"><span class="pri-crit">H4</span></td><td><strong>Site-stratified CV avoids inflated OOF AUC caused by site-level acoustic leakage from recorder fingerprints and location clustering.</strong></td><td>Section G1, G2: top-5 authors = 40%+ of clips; site-level recorder fingerprints are learnable. Random CV splits leak site characteristics.</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">High</span></td><td>Compare random 5-fold OOF vs. site-stratified 5-fold OOF. Gap > 0.05 = leakage confirmed. Use site-stratified as the primary metric.</td></tr></tbody></table></div>
+<h2>Tier 2 — High Priority (test in first 2 weeks after baseline)</h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Hypothesis</th><th>EDA Evidence</th><th>Expected Impact</th><th>How to Test</th></tr></thead><tbody><tr class=""><td class="col-num"><span class="pri-high">H5</span></td><td><strong>BirdCLEF 2025 Pantanal clips and soundscapes are the highest-value external data — adding them directly expands labeled Pantanal coverage.</strong></td><td>Section H: BC2025 covers the same Pantanal region, same ARU recorder type, same multi-taxon scope. Highest domain match of any prior competition.</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Med–High</span></td><td>Add BC2025 data (after URL dedup). Measure OOF AUC change. Flag: check if BC2025 soundscape sites overlap with BC2026 test sites.</td></tr><tr class="alt"><td class="col-num"><span class="pri-high">H6</span></td><td><strong>Backbone pre-training on all BirdCLEF clip audio (2021–2025), then fine-tuning on 2026+Pantanal data, gives better representations for rare species than training from scratch.</strong></td><td>Section H: prior competition clips share XC/iNat sources. Species-level acoustic features transfer across geographies even if domain differs.</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Med–High</span></td><td>Compare scratch training vs. pre-trained backbone. Focus comparison on rare-class AUC (< 10 clips). Expected gain concentrated in under-represented species.</td></tr><tr class=""><td class="col-num"><span class="pri-high">H7</span></td><td><strong>Per-clip peak normalization before mel extraction removes the 600× loudness variance that confounds spectral features with recording level.</strong></td><td>Section E3: RMS distribution spans 600× dynamic range across recordings. Without normalization, the model partially learns loudness as a species feature.</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Medium</span></td><td>Train with and without normalization. Mostly affects convergence speed and feature quality rather than final AUC. Low-risk, do by default.</td></tr><tr class="alt"><td class="col-num"><span class="pri-high">H8</span></td><td><strong>A multi-taxon head architecture (shared backbone, separate dense heads per taxon) outperforms a flat 234-class head by allocating capacity to each taxon's frequency range.</strong></td><td>Section A §3: frogs are 200–4000 Hz, insects 4000–16000 Hz, birds 1000–8000 Hz. A flat head must learn all three spectral regimes simultaneously with shared capacity.</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Medium</span></td><td>Flat head baseline vs. 5-head multi-taxon model. Report per-taxon AUC separately. Expected: +0.03–0.06 on Amphibia/Insecta.</td></tr></tbody></table></div>
+<h2>Tier 3 — Medium Priority (test after baseline is stable)</h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Hypothesis</th><th>EDA Evidence</th><th>Expected Impact</th><th>How to Test</th></tr></thead><tbody><tr class=""><td class="col-num"><span class="pri-medium">H9</span></td><td><strong>Semi-supervised learning on 10,592 unlabeled soundscapes provides additional Pantanal-domain signal for rare and zero-clip species.</strong></td><td>Section B: 10,592 soundscapes are unlabeled but come from the exact deployment domain. Even without labels, they carry domain-specific acoustic patterns.</td><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">Medium</span></td><td>Pseudo-label with baseline model (threshold > 0.5). Retrain on pseudo-labeled + real labeled. <em>Only start this after H1–H4 are validated.</em></td></tr><tr class="alt"><td class="col-num"><span class="pri-medium">H10</span></td><td><strong>Time-of-day conditioning (sin/cos hour encoding) improves prediction accuracy because species activity is time-dependent.</strong></td><td>Section E4: dawn chorus peak in soundscapes. Test row_id encodes datetime. Section D: seasonal patterns visible in soundscape metadata.</td><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">Low–Med</span></td><td>Add <code>sin(2π·hour/24)</code>, <code>cos(2π·hour/24)</code> as input features. Free feature, low implementation cost. Expected: small gain on temporally-structured species.</td></tr><tr class=""><td class="col-num"><span class="pri-medium">H11</span></td><td><strong>Two-stage detection for insect sonotypes (detect parent taxon → sub-classify sonotype) recovers near-zero AUC on all 25 insect sonotype classes.</strong></td><td>Section B §5: 25 insect sonotypes have zero training clips. Their only supervision is the 66 labeled soundscape windows. Flat 234-class model produces near-random scores for these classes.</td><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">Medium</span></td><td>First: visualize sonotype spectrograms — are they visually distinguishable? If yes: train parent-taxon detector, then sonotype sub-classifier. If no: accept low AUC; not worth engineering cost early.</td></tr><tr class="alt"><td class="col-num"><span class="pri-medium">H12</span></td><td><strong>Post-processing by Pantanal species prevalence reduces systematic over-prediction of globally-common XC species that are locally rare or absent in Pantanal.</strong></td><td>Section G5: train clip geographic distribution is global; test is Pantanal. Model will over-score species abundant globally but Pantanal-absent.</td><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">Low–Med</span></td><td>Estimate species prevalence from labeled soundscape windows. Multiply raw scores by prior. Under ROC-AUC this only helps by re-ranking across windows; measure OOF before applying.</td></tr></tbody></table></div>
+<div class="infobox" style="border-left:4px solid #f39c12;background:#fffde7;padding:12px 16px;margin:12px 0;border-radius:4px"><strong>Priority order:</strong> H1 → H2 → H3 → H4 → H7 → H5 → H6 → H8 → H9 → H10 → H11 → H12<br><em>Do not test H9–H12 until H1–H4 are verified on OOF CV. Stacking unvalidated interventions produces uninterpretable results.</em></div>
+<h1 id="s3">§3 — Data Pipeline Architecture</h1>
+<h2>3.1 — Input Sources (Ranked by In-Domain Value)</h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Size</th><th>In-Domain?</th><th>Labels?</th><th>Recommended Use</th><th>Risk</th></tr></thead><tbody><tr class=""><td>Train soundscapes (BC2026)</td><td>10,658 ogg</td><td><span class="badge" style="color:#27ae60;background:#eafaf1;border:1px solid #27ae60">Pantanal ARU</span></td><td>66 labeled (1,478 windows)</td><td>Primary training + all as backgrounds</td><td>Site S22 dominates labeled subset</td></tr><tr class="alt"><td>Train clips (BC2026)</td><td>35,549 ogg</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Partial — global</span></td><td>Clip-level</td><td>Training with windowing + energy gating</td><td>Global geography ≠ Pantanal domain</td></tr><tr class=""><td>BC2025 clips + soundscapes</td><td>~50K est.</td><td><span class="badge" style="color:#27ae60;background:#eafaf1;border:1px solid #27ae60">High — same region</span></td><td>Clip + soundscape window</td><td>Add directly after URL dedup</td><td>Possible test-set site overlap</td></tr><tr class="alt"><td>Prior BC clips 2021–2024</td><td>Large</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Low — diff regions</span></td><td>Clip-level</td><td>Backbone pre-training only</td><td>Hurts calibration if mixed directly</td></tr><tr class=""><td>Additional Neotropical XC</td><td>Variable</td><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">Medium — regional</span></td><td>Clip-level</td><td>Rare/zero-clip species only</td><td>May introduce non-Pantanal recordings</td></tr><tr class="alt"><td>Non-Pantanal soundscapes</td><td>Various</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">NO — wrong domain</span></td><td>Various</td><td>Do NOT use as domain training data</td><td>Confuses domain adaptation</td></tr></tbody></table></div>
+<h2>3.2 — Clip Processing Pipeline</h2>
+<div class="table-wrap"><table><thead><tr><th>Step</th><th>Action</th><th>Why</th></tr></thead><tbody><tr class=""><td>1. Load &amp; resample</td><td>Load OGG → resample to 32 kHz mono</td><td>All BC2026 clips already 32 kHz. Minimal overhead.</td></tr><tr class="alt"><td>2. Peak normalization</td><td>Normalize peak to 0.9 before any windowing</td><td>Removes 600× loudness variance. Apply universally.</td></tr><tr class=""><td>3. Window extraction</td><td>Slice into non-overlapping 5s windows. Short clips (&lt;5s): pad with zeros and treat as single window.</td><td>Matches the 5s scoring unit exactly.</td></tr><tr class="alt"><td>4. Energy gating</td><td>Compute RMS of each window. If RMS &lt; −45 dBFS → mark as <code>background_only</code> (no species label). Do NOT assign primary_label to silent windows.</td><td>Removes most systematic false-positive labels from silence.</td></tr><tr class=""><td>5. Background mixing</td><td>Sample random 5s window from unlabeled Pantanal soundscape. Mix at SNR ~ Uniform(−5, +10) dB. Background label = all-zeros.</td><td>Highest-ROI step. Directly bridges clip→soundscape domain gap.</td></tr><tr class="alt"><td>6. Waveform mixup</td><td>With prob 0.5: sample second clip. Mix x = λ·x1 + (1-λ)·x2, λ ~ Beta(0.4, 0.4). Blend labels: y = λ·y1 + (1-λ)·y2 (soft labels, multi-label BCE).</td><td>Trains multi-label co-presence matching test windows.</td></tr><tr class=""><td>7. Mel spectrogram</td><td>n_mels=128, hop_length=320 (10ms), n_fft=1024, fmin=50, fmax=14000 Hz. Log-amplitude. Result: 128×500 per 5s window.</td><td>Covers frog (200–4k), bird (1–8k), insect (4–16k) ranges.</td></tr><tr class="alt"><td>8. SpecAugment (P3 only)</td><td>Freq masking 1–2 bands (≤10% mel bins), time masking 1 block (≤8% frames). <em>Only after P1–P2 are validated.</em></td><td>Breaks recorder-fingerprint memorization (author EQ patterns).</td></tr></tbody></table></div>
+<h2>3.3 — Label Construction</h2>
+<ul><li><strong>Clip windows:</strong> assign primary_label + secondary_labels to all non-silent windows. Accept clip-level label noise; energy gating handles the worst cases.</li><li><strong>Soundscape labeled windows:</strong> use exact per-window expert labels as gold standard. Oversample these relative to clips in the training loop.</li><li><strong>Unlabeled soundscape windows (as background mix source):</strong> label as all-zeros. Do NOT infer labels from clip overlap.</li><li><strong>Rare-species oversampling:</strong> weight each labeled soundscape window by <code>1/sqrt(rarest_class_freq)</code> to ensure all 234 classes appear in every epoch.</li><li><strong>Soft labels for mixup:</strong> BCE loss must support continuous [0,1] targets. Confirm framework compatibility before training.</li></ul>
+<h1 id="s4">§4 — Validation Strategy</h1>
+<p>A realistic validation scheme is the single most important infrastructure decision. An optimistic CV scheme means every experiment looks better than it actually is. BirdCLEF competitions are notorious for site-level acoustic leakage inflating OOF scores.</p>
+<h2>4.1 — Why Random K-Fold Is Wrong Here</h2>
+<ul><li><strong>Author leakage:</strong> Top-5 authors = 40%+ of clips. Random splits put clips from the same recording session in both train and validation. The model memorizes recorder fingerprints.</li><li><strong>Location leakage:</strong> Nearby recordings share forest background noise. GPS-clustered clips in both train/val look like generalization but isn't.</li><li><strong>Site leakage in soundscapes:</strong> Site S22 = 64% of labeled windows. A random split across S22 windows leaks site acoustics — not real generalization.</li><li><strong>Temporal leakage:</strong> Same recorder makes multiple trips to the same site in the same year. Near-duplicate recording clusters (EDA §G3) leak across random splits.</li></ul>
+<h2>4.2 — Recommended Validation Scheme</h2>
+<div class="table-wrap"><table><thead><tr><th>Scheme</th><th>How to Split</th><th>When to Use</th></tr></thead><tbody><tr class=""><td>Site-stratified 5-fold (clips)</td><td>Group clips by GPS cluster (K-means on lat/lon → ~20 clusters). Each fold holds out complete geographic clusters.</td><td>Primary CV for clip-based experiments</td></tr><tr class="alt"><td>Author-stratified 5-fold (clips)</td><td>Group clips by author/recorder ID. Each fold holds out complete author groups.</td><td>Cross-check: should give similar result to site-stratified</td></tr><tr class=""><td>Soundscape site holdout</td><td>Reserve 3 non-S22 soundscape sites as held-out evaluation. Train on remaining 20 sites. S22 should not be the holdout — it is too dominant.</td><td>Primary CV for soundscape-based experiments</td></tr><tr class="alt"><td>Taxonomic-stratified sanity check</td><td>Ensure each fold contains examples from all 5 taxon classes. Verify Amphibia and Insecta are not concentrated in one fold.</td><td>Sanity check on all fold configurations</td></tr></tbody></table></div>
+<div class="infobox" style="border-left:4px solid #e67e22;background:#fef9e7;padding:12px 16px;margin:12px 0;border-radius:4px"><strong>Key rule:</strong> Always report OOF AUC separately per taxonomic class (Aves, Amphibia, Insecta, Mammalia, Reptilia). A high overall macro AUC driven by bird classes while Amphibia/Insecta AUC is near 0.5 is a false positive. The leaderboard will expose this.</div>
+<h1 id="s5">§5 — Augmentation Plan (Evidence-Based)</h1>
+<p>Every augmentation below is tied to a specific EDA finding. Generic augmentations not supported by evidence are excluded. The list is ordered by implementation priority.</p>
+<h2>5.1 — Recommended Augmentations (Ordered by Priority)</h2>
+<div class="table-wrap"><table><thead><tr><th>Priority</th><th>Augmentation</th><th>Problem It Addresses</th><th>EDA Source</th><th>Caveat</th></tr></thead><tbody><tr class=""><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">P1 Must Have</span></td><td><strong>Energy gating</strong> (preprocessing)</td><td>14% mean silence; some clips 90% silent. Clip-level labels assigned to silent windows → systematic false positives.</td><td>§E3, §F3</td><td>Threshold tuning: test −45, −40, −50 dBFS on OOF before fixing.</td></tr><tr class="alt"><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">P1 Must Have</span></td><td><strong>Peak normalization</strong> (preprocessing)</td><td>600× loudness variance. Without normalization, model learns recording level as a species cue.</td><td>§E3</td><td>Apply per-clip before windowing. No hyperparameters.</td></tr><tr class=""><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">P1 Must Have</span></td><td><strong>Background mixing</strong> (soundscape overlay)</td><td>Clip→soundscape domain gap is the primary train/test mismatch. 10,592 unlabeled Pantanal soundscapes provide real noise backgrounds.</td><td>§G5, §F1</td><td>Pre-screen soundscapes for extreme artifacts (rain, wind) first. SNR range: −5 to +10 dB.</td></tr><tr class="alt"><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">P1 Must Have</span></td><td><strong>Waveform mixup</strong> (λ~Beta(0.4,0.4))</td><td>Training is mostly single-label; test windows have 3–5 co-active species.</td><td>§F2, §C</td><td>Requires soft-label BCE loss. Confirm framework supports float targets.</td></tr><tr class=""><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">P2 High Value</span></td><td><strong>Rare-species oversampling</strong></td><td>28 zero-clip species; many with &lt;5 clips. Standard sampling skips them for entire epochs.</td><td>§B, §C</td><td>Weight = 1/sqrt(class_freq). Watch for common-class degradation.</td></tr><tr class="alt"><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">P3 Medium</span></td><td><strong>SpecAugment</strong> (conservative)</td><td>Top-5 author recorder fingerprints = 40%+ of data. Frequency masking breaks EQ-pattern memorization.</td><td>§G2</td><td>Max 10% freq bins, max 8% time frames. Validate on OOF before enabling permanently.</td></tr><tr class=""><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">P3 Medium</span></td><td><strong>Soft saturation</strong> (tanh clipping sim)</td><td>~8% of clips have clipping artifacts. Model should be robust to saturation distortion.</td><td>§E3</td><td>Apply to 20–30% of clips randomly only.</td></tr><tr class="alt"><td><span class="badge" style="color:#2980b9;background:#eaf4fb;border:1px solid #2980b9">P3 Low</span></td><td><strong>Time-of-day feature</strong> (not augmentation)</td><td>Dawn chorus peak; species activity is time-conditional. Test row_id encodes datetime.</td><td>§E4</td><td>Encode as sin(2π·hour/24), cos(2π·hour/24). Free, low-risk feature.</td></tr></tbody></table></div>
+<h2>5.2 — Augmentations Explicitly Excluded</h2>
+<div class="table-wrap"><table><thead><tr><th>Excluded Augmentation</th><th>Reason</th></tr></thead><tbody><tr class=""><td>Large pitch shift (±4+ semitones)</td><td>Frog and insect calls are pitch-specific for species ID. Large shifts change species identity in non-bird taxa. Use ≤±2 semitones for birds only.</td></tr><tr class="alt"><td>Time stretching &gt;±20%</td><td>Temporal rhythm of calls (rate, duty cycle) is species-diagnostic, especially for insects. Heavy stretching distorts these cues.</td></tr><tr class=""><td>Additive Gaussian / white noise</td><td>Pantanal background noise is structured (wind, rain, water, co-species) — not white. Use real soundscape backgrounds instead.</td></tr><tr class="alt"><td>Spectrogram CutMix</td><td>Pasting spectrogram patches creates frequency-localized chimeras that are acoustically impossible. Waveform mixup is physically meaningful; spectrogram CutMix is not.</td></tr><tr class=""><td>Random crop to &lt;2.5s</td><td>Creates training examples shorter than half a prediction window. Label assignment becomes meaningless for sub-2.5s fragments.</td></tr><tr class="alt"><td>Frequency shifting (full spectrum)</td><td>Harmonic structures are key species discriminators. Shifting destroys harmonic ratios.</td></tr></tbody></table></div>
+<h1 id="s6">§6 — Prior Data Decision</h1>
+<p>This section answers: which prior BirdCLEF competition data should be used, in what capacity, and what should be avoided. The answer is not binary — different datasets serve different purposes.</p>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Geography</th><th>Taxon Overlap</th><th>Domain Match</th><th>Recommended Use</th><th>Risk</th></tr></thead><tbody><tr class=""><td>BC2025 clips + soundscapes</td><td>Pantanal, Brazil</td><td><span class="badge" style="color:#27ae60;background:#eafaf1;border:1px solid #27ae60">High</span></td><td><span class="badge" style="color:#27ae60;background:#eafaf1;border:1px solid #27ae60">Excellent</span></td><td>Add directly to training after URL dedup</td><td>Possible test-site overlap with BC2026 — check dates</td></tr><tr class="alt"><td>BC2024 clips</td><td>Multiple regions</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">Moderate</span></td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Poor</span></td><td>Backbone pre-training only</td><td>Hurts calibration if mixed directly with BC2026</td></tr><tr class=""><td>BC2023 / BC2022 clips</td><td>Global / India / Africa</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Low</span></td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Very poor</span></td><td>Backbone pre-training only if needed</td><td>Geographic and species mismatch</td></tr><tr class="alt"><td>BC2021 clips</td><td>Cornell / North America</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Very low</span></td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Very poor</span></td><td>Skip or very broad pre-training only</td><td>Unlikely to help; may hurt calibration</td></tr><tr class=""><td>Non-Pantanal soundscapes (any year)</td><td>Various non-Pantanal</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Low</span></td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">Wrong domain</span></td><td>Do NOT use as domain training data</td><td>Confuses soundscape domain adaptation</td></tr></tbody></table></div>
+<div class="infobox" style="border-left:4px solid #27ae60;background:#eafaf1;padding:12px 16px;margin:12px 0;border-radius:4px"><strong>Decision:</strong> Use BC2025 as in-domain training data (high priority). Use BC2021–2024 clips for backbone pre-training only. Do NOT use non-Pantanal soundscapes as soundscape domain training data.<br><br><strong>Mandatory before combining any prior data:</strong> deduplicate by Xeno-Canto URL. Prior competitions draw from the same XC pool. Duplicate clips in both train and validation will inflate OOF AUC.</div>
+<h1 id="s7">§7 — Risk Register</h1>
+<div class="table-wrap"><table><thead><tr><th>Risk</th><th>Severity</th><th>EDA Source</th><th>Mitigation</th></tr></thead><tbody><tr class=""><td>Clip→soundscape domain gap</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">CRITICAL</span></td><td>§G5, §F1</td><td>H1: Background mixing. H4: Site-stratified CV. Monitor per-site AUC during training.</td></tr><tr class="alt"><td>Label noise from clip windowing</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">HIGH</span></td><td>§E3, §F3</td><td>H3: Energy gating. Discard silent windows. Accept residual noise for non-silent windows.</td></tr><tr class=""><td>28 zero-clip species (25 insect sonotypes + 3 frogs)</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">HIGH</span></td><td>§B §5, §C</td><td>Oversample labeled soundscape windows. Accept near-zero AUC on insect sonotypes initially. H11: Two-stage detection in Phase 4.</td></tr><tr class="alt"><td>Site S22 dominance in labeled soundscapes (64% of windows)</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">HIGH</span></td><td>§G4</td><td>Hold out non-S22 sites for evaluation. Do not train final model exclusively on S22-derived labels.</td></tr><tr class=""><td>Author/recorder fingerprint memorization</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">MEDIUM</span></td><td>§G2</td><td>H4: Author-stratified CV. P3 SpecAugment. Monitor gap between author-stratified and random CV OOF.</td></tr><tr class="alt"><td>Seasonal mismatch (test ≈ Feb 2025, start of dry season)</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">MEDIUM</span></td><td>§D, §E4</td><td>H10: Add time-of-day and month features. Weight training examples less from extreme wet-season months.</td></tr><tr class=""><td>Rating-zero clips (36% of training clips, quality unknown)</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">MEDIUM</span></td><td>§A §4A</td><td>Manually audit 50 random rating-0 clips. If systematic noise: quality-stratified sampling. If clean: keep all clips.</td></tr><tr class="alt"><td>XC duplicate clips across BC2025–BC2026 inflating OOF</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">MEDIUM</span></td><td>§H</td><td>Deduplicate by XC URL before combining datasets.</td></tr><tr class=""><td>CPU inference timeout on complex models</td><td><span class="badge" style="color:#c0392b;background:#fdf0f0;border:1px solid #c0392b">HIGH</span></td><td>§A §12</td><td>Design around ≤ EfficientNet-B2 or ConvNext-Tiny. Profile inference early. ONNX export for speed.</td></tr><tr class="alt"><td>Macro AUC masking poor non-bird taxon performance</td><td><span class="badge" style="color:#e67e22;background:#fef9e7;border:1px solid #e67e22">MEDIUM</span></td><td>§A §3</td><td>Track OOF AUC per taxon separately. Target: all taxon classes ≥ 0.70. Non-bird AUC below 0.60 requires targeted intervention.</td></tr></tbody></table></div>
+<h1 id="s8">§8 — Phased Experiment Plan</h1>
+<p>Experiments are sequenced to maximize information gain per GPU-hour. Each phase must produce a validated OOF AUC before moving to the next. Do not stack unvalidated interventions.</p>
+<div class="table-wrap"><table><thead><tr><th>Phase</th><th>Target Dates</th><th>Goals</th><th>Exit Criterion</th></tr></thead><tbody><tr class=""><td><strong>Phase 0</strong><br>Infrastructure</td><td>Weeks 1–2<br>(by Apr 26)</td><td><ul><li>Clip windowing + energy gating pipeline</li><li>Site-stratified 5-fold splits</li><li>Batched mel spectrogram extraction</li><li>Baseline EfficientNet-B0, flat 234-class</li><li>OOF AUC tracking per taxon</li></ul></td><td>Reproducible baseline OOF AUC &gt; 0.65<br>Inference time &lt; 60 min on CPU</td></tr><tr class="alt"><td><strong>Phase 1</strong><br>Core Augmentation</td><td>Weeks 2–3<br>(by May 3)</td><td><ul><li>Peak normalization (H7)</li><li>Background mixing P1 (H1)</li><li>Waveform mixup P1 (H2)</li><li>Rare-species oversampling (H3)</li></ul></td><td>+0.03 OOF AUC vs Phase 0<br>Non-bird taxon AUC &gt; 0.60</td></tr><tr class=""><td><strong>Phase 2</strong><br>Data Expansion</td><td>Weeks 3–4<br>(by May 10)</td><td><ul><li>Add BC2025 data + dedup (H5)</li><li>Add Neotropical XC for zero-clip species</li><li>SpecAugment P3 validation</li></ul></td><td>+0.02 OOF AUC vs Phase 1</td></tr><tr class="alt"><td><strong>Phase 3</strong><br>Architecture</td><td>Weeks 4–5<br>(by May 17)</td><td><ul><li>Multi-taxon head experiment (H8)</li><li>Backbone pre-training on BC2021–2024 (H6)</li><li>Time-of-day conditioning (H10)</li></ul></td><td>+0.02 OOF AUC vs Phase 2<br>Decide: multi-taxon head yes/no</td></tr><tr class=""><td><strong>Phase 4</strong><br>Semi-supervised</td><td>Weeks 5–6<br>(by May 24)</td><td><ul><li>Pseudo-labeling on unlabeled soundscapes (H9)</li><li>Two-stage insect sonotype detection (H11)</li><li>Model ensemble (2–3 seeds minimum)</li></ul></td><td>+0.01–0.02 OOF AUC<br>Insect sonotype AUC &gt; 0.55</td></tr><tr class="alt"><td><strong>Phase 5</strong><br>Final Polish</td><td>Weeks 6–8<br>(by Jun 3)</td><td><ul><li>Inference optimization (ONNX / torch.compile)</li><li>Prevalence post-processing experiment (H12)</li><li>Final ensemble submission</li><li>Submission slot management</li></ul></td><td>Submission time &lt; 85 min<br>Final ensemble &gt; Phase 4 OOF</td></tr></tbody></table></div>
+<div class="infobox" style="border-left:4px solid #e67e22;background:#fef9e7;padding:12px 16px;margin:12px 0;border-radius:4px"><strong>Checkpoint rule:</strong> If a phase does not meet its exit criterion after 2 attempts, diagnose root cause before advancing. Do not move to the next phase on faith — each phase builds on validated results from the previous one.</div>
+<h1 id="s9">§9 — Open Questions &amp; Gaps</h1>
+<p>These cannot be resolved from EDA alone and require either direct experimentation or information that becomes available later in the competition.</p>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Why It Matters</th><th>How to Resolve</th></tr></thead><tbody><tr class=""><td>Which species actually appear in the test soundscapes?</td><td>Classes absent in test are skipped from macro AUC. Knowing test class coverage would change rare-class priority.</td><td>Cannot know until final scoring. Treat all 234 classes as potentially present.</td></tr><tr class="alt"><td>How many test soundscapes are there?</td><td>Determines inference time budget per soundscape and maximum architecture size.</td><td>Check sample_submission row count. Estimate: ~50–200 soundscapes based on prior year competition sizes.</td></tr><tr class=""><td>What quality are the rating-zero clips?</td><td>36% of training clips are unrated. If many are low quality, they should be down-weighted or excluded.</td><td>Listen to 50 random rating-0 clips manually. Run SNR estimation script on all rating-0 clips.</td></tr><tr class="alt"><td>Are BC2025 soundscapes from the same physical sites as BC2026 test soundscapes?</td><td>If yes, site-level acoustic leakage between BC2025 and BC2026 test is possible.</td><td>Compare site metadata. If site IDs overlap: exclude overlapping BC2025 soundscapes from domain training.</td></tr><tr class=""><td>Are insect sonotypes acoustically distinguishable in practice?</td><td>If sonotype boundaries are visually/acoustically ambiguous even to experts, the 25-class insect block may be inherently unlearnable.</td><td>Spectrogram visualization of sonotype examples. If visually indistinguishable: accept low AUC; skip H11 engineering cost.</td></tr><tr class="alt"><td>What is the test soundscape recording date distribution?</td><td>Feb 2025 is all we know from sample submission. If test spans multiple months, seasonal conditioning matters more.</td><td>Infer from final submission row_ids as more test info becomes available.</td></tr><tr class=""><td>Does BC2026 evaluation skip truly zero-positive classes or uses all 234?</td><td>The skip policy determines effective N for macro average. If most 234 classes appear, rare classes matter more.</td><td>Check competition FAQ / discussion forum. Assume all 234 classes are possible.</td></tr></tbody></table></div>
+
+<div class="summary-box">
+  <h3>Three Headline Findings From This Analysis</h3>
+  <ul>
+    <li><strong>The domain gap (clip → soundscape) is the #1 problem.</strong>
+    Background mixing with unlabeled Pantanal soundscapes (H1) is the highest-ROI single
+    intervention. Do this before anything else.</li>
+    <li><strong>Validation scheme determines everything.</strong>
+    Site-stratified 5-fold CV is mandatory (H4).
+    Random splits produce inflated OOF that doesn't match leaderboard position.</li>
+    <li><strong>Non-bird taxa are the leaderboard differentiator.</strong>
+    Frogs, insects, and mammals are 30% of targets.
+    Track their AUC separately. Most competitors will under-optimize for them.</li>
+  </ul>
+</div>
+
+</div>
+
+<footer>
+  BirdCLEF 2026 — Modeling Hypotheses &amp; Strategy Report &nbsp;|&nbsp;
+  Generated 2026-04-12 &nbsp;|&nbsp;
+  Synthesized from EDA Sections A–I &nbsp;|&nbsp;
+  reports/modeling_report.html
+</footer>
+
+</div></body></html>
