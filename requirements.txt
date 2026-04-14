@@ -1,0 +1,35 @@
+# BirdCLEF 2026 — Python dependencies
+#
+# SETUP (first time):
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   pip install torch==2.6.0+cpu torchaudio==2.6.0+cpu torchvision==0.21.0+cpu \
+#       --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements.txt
+#
+# GPU training (replace torch lines above):
+#   pip install torch torchaudio torchvision \
+#       --index-url https://download.pytorch.org/whl/cu121
+
+# Core ML — pinned to verified-compatible set
+# torch + torchaudio + torchvision installed separately (see above)
+timm==1.0.26
+
+# Audio
+soundfile==0.13.1
+
+# Data / Science
+numpy==2.4.4
+pandas==3.0.2
+scikit-learn==1.8.0
+scipy==1.17.1
+
+# Config / utilities
+PyYAML>=6.0
+tqdm==4.67.3
+
+# Notebooks / reporting (optional)
+jupyter>=1.0.0
+ipykernel>=6.0.0
+matplotlib>=3.8.0
+seaborn>=0.13.0

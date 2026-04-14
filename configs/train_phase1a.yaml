@@ -1,0 +1,12 @@
+# train_phase1a.yaml — Phase 1a: Background Mixing Only (isolate H1)
+# Run: python scripts/train.py --config configs/train_phase1a.yaml --fold 0
+
+experiment_name: phase1a_bg_only
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+
+  mixup:
+    enabled: false

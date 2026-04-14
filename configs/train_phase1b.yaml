@@ -1,0 +1,13 @@
+# train_phase1b.yaml — Phase 1b: Waveform Mixup Only (isolate H2)
+# Run: python scripts/train.py --config configs/train_phase1b.yaml --fold 0
+
+experiment_name: phase1b_mixup_only
+
+augmentation:
+  background_noise:
+    enabled: false
+
+  mixup:
+    enabled: true
+    alpha: 0.4
+    prob: 0.5
