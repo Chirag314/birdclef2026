@@ -19,8 +19,10 @@ Phase 0 exit criterion:
 """
 
 import argparse
+import json
 import logging
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -114,6 +116,11 @@ def main():
     cfg["device"] = device
     logger.info(f"Experiment: {exp_name} | device: {device}")
     logger.info(f"Config: {args.config}")
+
+    # Snapshot the exact config used so this run is reproducible later
+    config_snap = os.path.join(log_dir, f"{exp_name}_config.yaml")
+    shutil.copy(args.config, config_snap)
+    logger.info(f"Config snapshot: {config_snap}")
 
     if args.dry_run:
         cfg["training"]["epochs"] = 1
@@ -274,6 +281,14 @@ def main():
         oof_preds, oof_targets, fold_ids = oof.get_arrays()
         oof_metrics = compute_metrics(oof_targets, oof_preds, taxonomy_df)
         logger.info(f"\nFull OOF metrics:\n{format_metrics(oof_metrics)}")
+
+        metrics_path = os.path.join(cfg["paths"]["artifacts"], "oof",
+                                    f"{exp_name}_metrics.json")
+        out = {k: v for k, v in oof_metrics.items()
+               if not isinstance(v, np.ndarray)}
+        with open(metrics_path, "w") as f:
+            json.dump(out, f, indent=2, default=float)
+        logger.info(f"Metrics summary: {metrics_path}")
 
         oof_path = save_oof(
             oof_preds, oof_targets, fold_ids, taxonomy_df,

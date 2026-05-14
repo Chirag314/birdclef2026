@@ -31,11 +31,9 @@ fold_column: fold           # column name written to folds.csv
 # proximity to nearest soundscape site, or treat all clips as a separate group.
 groupby_column: site_code
 
-# For train clips (XC/iNat), they have no site code.
-# Options:
-#   exclude   — only use soundscapes for fold assignment (clips used in all folds)
-#   geo_assign — assign each clip to nearest soundscape site by lat/lon
-clip_site_assignment: geo_assign
+# For train clips (XC/iNat), folds are grouped by author (recordist).
+# This prevents the same recordist from appearing in both train and val.
+clip_site_assignment: author_group
 
 # ---------------------------------------------------------------------------
 # Minimum samples per class per fold

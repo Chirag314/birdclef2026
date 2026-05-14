@@ -89,24 +89,23 @@ def make_soundscape_folds(soundscape_labels_df: pd.DataFrame,
 
 def make_clip_folds(train_df: pd.DataFrame, n_folds: int = 5) -> pd.DataFrame:
     """
-    Assign folds to training clips using StratifiedKFold on primary_label.
-
-    Note: This does NOT prevent author leakage (same author in train+val is possible).
-    This is the Phase 0 baseline. Author-stratified CV is a Phase 1 improvement.
+    Assign folds to training clips using GroupKFold on author (recordist).
+    Prevents the same recordist from appearing in both train and val folds.
     """
-    from sklearn.model_selection import StratifiedKFold
+    from sklearn.model_selection import GroupKFold
 
-    df = train_df[["filename", "primary_label"]].copy()
+    df = train_df[["filename", "primary_label", "author"]].copy()
     df["primary_label"] = df["primary_label"].astype(str)
+    df["author"] = df["author"].fillna("unknown").astype(str)
     df["source"] = "clip"
     df["site_code"] = "N/A"
     df["fold"] = -1
 
-    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+    groups = df["author"].values
     X = np.arange(len(df))
-    y = df["primary_label"].values
 
-    for fold_idx, (_, val_idx) in enumerate(skf.split(X, y)):
+    gkf = GroupKFold(n_splits=n_folds)
+    for fold_idx, (_, val_idx) in enumerate(gkf.split(X, groups=groups)):
         df.iloc[val_idx, df.columns.get_loc("fold")] = fold_idx
 
     # Verify all folds assigned
@@ -116,8 +115,9 @@ def make_clip_folds(train_df: pd.DataFrame, n_folds: int = 5) -> pd.DataFrame:
     logger.info("Clip fold distribution:")
     for fold in range(n_folds):
         n = (df["fold"] == fold).sum()
+        n_authors = df[df["fold"] == fold]["author"].nunique()
         n_classes = df[df["fold"] == fold]["primary_label"].nunique()
-        logger.info(f"  Fold {fold}: {n} clips | {n_classes} distinct species in val")
+        logger.info(f"  Fold {fold}: {n} clips | {n_authors} authors | {n_classes} distinct species in val")
 
     return df
 
@@ -172,6 +172,14 @@ def main():
 
     folds_df = pd.concat([clip_folds, ss_folds], ignore_index=True)
 
+    # group_key: the field actually used for CV grouping per row
+    # clips → author (recordist); soundscapes → site_code
+    folds_df["group_key"] = np.where(
+        folds_df["source"] == "clip",
+        folds_df["author"].fillna("unknown"),
+        folds_df["site_code"],
+    )
+
     # Sanity checks
     assert folds_df["fold"].between(0, n_folds - 1).all(), \
         "Some rows have invalid fold values"
@@ -181,9 +189,11 @@ def main():
 
     check_rare_class_coverage(folds_df, n_folds)
 
-    # Save
+    # Save — explicit column order: identifier, fold, source, grouping provenance
+    out_cols = ["filename", "primary_label", "fold", "source",
+                "site_code", "author", "group_key"]
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    folds_df.to_csv(output_path, index=False)
+    folds_df[out_cols].to_csv(output_path, index=False)
     logger.info(f"\nFolds saved to {output_path}")
 
     # Quick summary table
