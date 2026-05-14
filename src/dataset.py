@@ -96,6 +96,15 @@ def build_clip_windows(train_df: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
+def _parse_sec(t) -> float:
+    """Accept 'HH:MM:SS' strings or numeric seconds."""
+    try:
+        return float(t)
+    except (ValueError, TypeError):
+        h, m, s = str(t).split(":")
+        return int(h) * 3600 + int(m) * 60 + float(s)
+
+
 def build_soundscape_windows(soundscape_labels_df: pd.DataFrame,
                               soundscape_root: str,
                               encoder: Dict[str, int],
@@ -129,8 +138,8 @@ def build_soundscape_windows(soundscape_labels_df: pd.DataFrame,
 
         rows.append({
             "filepath": str(filepath),
-            "start_sec": float(row["start"]),
-            "end_sec": float(row["end"]),
+            "start_sec": _parse_sec(row["start"]),
+            "end_sec": _parse_sec(row["end"]),
             "primary_label": label_strs[0] if label_strs else "",
             "label_vec": label_vec,
             "source": "soundscape",
