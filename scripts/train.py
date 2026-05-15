@@ -204,6 +204,35 @@ def main():
     # Cross-validation loop
     # ---------------------------------------------------------------------------
     for fold in fold_range:
+        ckpt_path = os.path.join(cfg["checkpoint"]["save_dir"],
+                                 f"{exp_name}_fold{fold}_best.pt")
+        if Path(ckpt_path).exists() and not args.dry_run:
+            logger.info(f"Fold {fold}: checkpoint found, running val inference for OOF...")
+            val_mask = all_windows["fold"] == fold
+            val_win = all_windows[val_mask].reset_index(drop=True)
+            val_indices = all_windows[val_mask].index.values
+            val_ds = WindowDataset(val_win, cfg, augmenter=None, is_train=False)
+            val_loader = DataLoader(
+                val_ds, batch_size=cfg["training"]["batch_size"] * 2,
+                shuffle=False, num_workers=cfg["training"].get("num_workers", 4),
+                pin_memory=(device == "cuda"),
+            )
+            from src.model import load_checkpoint as load_ckpt
+            model = build_model(cfg, n_classes=n_classes).to(device)
+            load_ckpt(model, ckpt_path)
+            from src.train_engine import validate_one_epoch
+            val_metrics = validate_one_epoch(model, val_loader, device, taxonomy_df)
+            oof.update(
+                val_indices,
+                val_metrics.get("y_pred", np.zeros((len(val_win), n_classes))),
+                val_metrics.get("y_true", np.zeros((len(val_win), n_classes))),
+                fold,
+            )
+            logger.info(f"Fold {fold} OOF reconstructed (AUC: {val_metrics.get('macro_auc', 0):.4f})")
+            del model
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
+            continue
+
         logger.info(f"\n{'='*60}\nStarting fold {fold}\n{'='*60}")
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
