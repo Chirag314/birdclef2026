@@ -14,6 +14,7 @@ import logging
 import os
 import sys
 import time
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -24,10 +25,28 @@ import yaml
 # ---------------------------------------------------------------------------
 # Paths — adjust if dataset names differ
 # ---------------------------------------------------------------------------
-MODEL_DIR = Path("/kaggle/input/birdclef2026-model")
-DATA_DIR  = Path("/kaggle/input/birdclef-2026")
-SRC_DIR   = Path("/kaggle/input/birdclef2026-model")  # src/ is packaged alongside checkpoints
-OUTPUT    = Path("/kaggle/working/submission.csv")
+def _find_dir(candidates):
+    for p in candidates:
+        if Path(p).exists():
+            return Path(p)
+    raise RuntimeError(f"None of these paths exist: {candidates}")
+
+MODEL_DIR = _find_dir([
+    "/kaggle/input/birdclef2026-model",
+    "/kaggle/input/datasets/cid007/birdclef2026-model",
+])
+DATA_DIR = _find_dir([
+    "/kaggle/input/birdclef-2026",
+    "/kaggle/input/competitions/birdclef-2026",
+])
+OUTPUT = Path("/kaggle/working/submission.csv")
+
+print(f"MODEL_DIR: {MODEL_DIR}")
+print(f"DATA_DIR: {DATA_DIR}")
+print("MODEL_DIR files:", [p.name for p in MODEL_DIR.iterdir()])
+
+# src/ is a subdirectory in the model dataset
+sys.path.insert(0, str(MODEL_DIR))
 
 TEST_DIR        = DATA_DIR / "test_soundscapes"
 TAXONOMY_CSV    = DATA_DIR / "taxonomy.csv"
@@ -47,10 +66,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s",
 logger = logging.getLogger(__name__)
 
 torch.set_num_threads(N_THREADS)
-
-# Add src to path (src/ is packaged in model dataset)
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
 
 from src.features import LogMelExtractor
 from src.model import build_model
@@ -80,7 +95,9 @@ logger.info(f"Sample submission: {len(sample_sub)} rows")
 # ---------------------------------------------------------------------------
 def load_fold_model(fold: int) -> torch.nn.Module:
     ckpt_path = MODEL_DIR / f"fold{fold}_best.pt"
-    model = build_model(cfg, n_classes=n_classes)
+    # pretrained=False: no HuggingFace download; we load weights from checkpoint
+    infer_cfg = {**cfg, "model": {**cfg["model"], "pretrained": False}}
+    model = build_model(infer_cfg, n_classes=n_classes)
     ckpt = torch.load(str(ckpt_path), map_location="cpu", weights_only=False)
     model.load_state_dict(ckpt["model_state_dict"])
     model.eval()
@@ -100,6 +117,7 @@ logger.info(f"Ensemble size: {len(fold_models)} folds")
 # Inference loop
 # ---------------------------------------------------------------------------
 start_time = time.time()
+logger.info(f"DATA_DIR contents: {[p.name for p in DATA_DIR.iterdir()]}")
 test_files = sorted(TEST_DIR.glob("*.ogg"))
 logger.info(f"Test soundscapes: {len(test_files)}")
 
@@ -158,6 +176,16 @@ for file_idx, filepath in enumerate(test_files):
 # ---------------------------------------------------------------------------
 # Build submission
 # ---------------------------------------------------------------------------
+sub_cols = sample_sub.columns.tolist()
+if not all_probs:
+    logger.warning("No soundscapes processed — filling all rows with prior probability")
+    submission = sample_sub.copy()
+    for c in class_cols:
+        submission[c] = fill_value
+    submission.to_csv(OUTPUT, index=False)
+    logger.info(f"Saved {len(submission)} prior-filled rows → {OUTPUT}")
+    raise SystemExit(0)
+
 all_probs = np.concatenate(all_probs, axis=0)
 submission = pd.DataFrame(all_probs, columns=class_cols)
 submission.insert(0, "row_id", all_row_ids)
