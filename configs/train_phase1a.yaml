@@ -1,12 +1,81 @@
 # train_phase1a.yaml — Phase 1a: Background Mixing Only (isolate H1)
-# Run: python scripts/train.py --config configs/train_phase1a.yaml --fold 0
+# Run: python scripts/train.py --config configs/train_phase1a.yaml
 
 experiment_name: phase1a_bg_only
 
+data:
+  use_train_clips: true
+  use_train_soundscapes: true
+  use_unlabeled_soundscapes: false
+  min_rating: 0.0
+  secondary_labels: ignore
+  window_overlap: 0.0
+  clip_max_windows: null
+  soundscape_label_as_strong: true
+
+model:
+  backbone: efficientnet_b0
+  pretrained: true
+  in_channels: 1
+  head: linear
+  pool: gem
+  gem_p: 3.0
+  dropout: 0.2
+
+training:
+  epochs: 30
+  batch_size: 64
+  gradient_accumulation: 1
+  mixed_precision: true
+  num_workers: 4
+  pin_memory: true
+
+loss:
+  name: bce_with_logits
+  pos_weight: null
+  label_smoothing: 0.0
+
+optimizer:
+  name: adamw
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  backbone_lr_multiplier: 0.1
+
+scheduler:
+  name: cosine_with_warmup
+  warmup_epochs: 2
+  min_lr: 1.0e-6
+
 augmentation:
-  background_noise:
-    enabled: true
-    snr_db_range: [-5.0, 10.0]
+  spec_augment:
+    enabled: false
 
   mixup:
     enabled: false
+
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]  # aggressive: includes near-equal-energy overlap
+
+  pitch_shift:
+    enabled: false
+  time_stretch:
+    enabled: false
+  gaussian_noise:
+    enabled: false
+
+validation:
+  metric: macro_roc_auc
+  skip_zero_positive_classes: true
+  eval_every_n_epochs: 1
+  early_stopping_patience: 5
+
+checkpoint:
+  save_dir: /data/birdclef2026/artifacts/checkpoints
+  save_top_k: 1
+  monitor: val_macro_roc_auc
+  mode: max
+
+logging:
+  log_dir: /data/birdclef2026/artifacts/logs
+  log_every_n_steps: 50

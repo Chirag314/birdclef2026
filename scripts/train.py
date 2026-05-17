@@ -200,6 +200,13 @@ def main():
     # OOF accumulator
     oof = OOFAccumulator(len(all_windows), n_classes)
 
+    # Build background pool once (used by all folds if bg augmentation is enabled)
+    bg_pool = []
+    if cfg.get("augmentation", {}).get("background_noise", {}).get("enabled", False):
+        ss_dir = Path(cfg["paths"]["train_soundscapes"])
+        bg_pool = sorted(str(p) for p in ss_dir.glob("*.ogg"))
+        logger.info(f"Background pool: {len(bg_pool)} soundscape files from {ss_dir}")
+
     # ---------------------------------------------------------------------------
     # Cross-validation loop
     # ---------------------------------------------------------------------------
@@ -244,7 +251,7 @@ def main():
 
         logger.info(f"Fold {fold}: train={len(train_win)} | val={len(val_win)}")
 
-        augmenter = Augmenter(cfg, background_pool=[], window_df=train_win)
+        augmenter = Augmenter(cfg, background_pool=bg_pool, window_df=train_win)
 
         train_ds = WindowDataset(train_win, cfg, augmenter=augmenter,
                                  is_train=True)
@@ -276,13 +283,14 @@ def main():
         loss_fn = get_loss(cfg, device=device)
 
         if args.dry_run:
-            # Override train loader to just 2 batches
+            # Override train and val loaders to just 2 batches each
             from itertools import islice
             class TwoStepLoader:
                 def __init__(self, loader): self._loader = loader
                 def __iter__(self): return islice(iter(self._loader), 2)
                 def __len__(self): return 2
             train_loader = TwoStepLoader(train_loader)
+            val_loader = TwoStepLoader(val_loader)
 
         best_state, best_metrics = run_training(
             model, train_loader, val_loader,
@@ -291,8 +299,8 @@ def main():
             augmenter=augmenter,
         )
 
-        # Accumulate OOF
-        if best_state is not None:
+        # Accumulate OOF (skip in dry-run — val loader is truncated)
+        if best_state is not None and not args.dry_run:
             model.load_state_dict(best_state)
             oof.update(
                 val_indices,
