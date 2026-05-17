@@ -44,6 +44,112 @@ audio:
   # fmin=20 and fmax=16000 keeps full bandwidth — do not narrow to bird-only range.
 
 # ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+data:
+  use_train_clips: true
+  use_train_soundscapes: true
+  use_unlabeled_soundscapes: false
+  min_rating: 0.0
+  secondary_labels: ignore
+  window_overlap: 0.0
+  clip_max_windows: null
+  soundscape_label_as_strong: true
+
+# ---------------------------------------------------------------------------
+# Model
+# ---------------------------------------------------------------------------
+model:
+  backbone: efficientnet_b0
+  pretrained: true
+  in_channels: 1
+  head: linear
+  pool: gem
+  gem_p: 3.0
+  dropout: 0.2
+
+# ---------------------------------------------------------------------------
+# Training
+# ---------------------------------------------------------------------------
+training:
+  epochs: 30
+  batch_size: 64
+  gradient_accumulation: 1
+  mixed_precision: true
+  num_workers: 4
+  pin_memory: true
+
+# ---------------------------------------------------------------------------
+# Loss
+# ---------------------------------------------------------------------------
+loss:
+  name: bce_with_logits
+  pos_weight: null
+  label_smoothing: 0.0
+
+# ---------------------------------------------------------------------------
+# Optimizer
+# ---------------------------------------------------------------------------
+optimizer:
+  name: adamw
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  backbone_lr_multiplier: 0.1
+
+# ---------------------------------------------------------------------------
+# Scheduler
+# ---------------------------------------------------------------------------
+scheduler:
+  name: cosine_with_warmup
+  warmup_epochs: 2
+  min_lr: 1.0e-6
+
+# ---------------------------------------------------------------------------
+# Augmentation
+# ---------------------------------------------------------------------------
+augmentation:
+  spec_augment:
+    enabled: false
+  mixup:
+    enabled: false
+    alpha: 0.4
+    prob: 0.5
+  background_noise:
+    enabled: false
+    snr_db_range: [-5.0, 10.0]
+  pitch_shift:
+    enabled: false
+  time_stretch:
+    enabled: false
+  gaussian_noise:
+    enabled: false
+
+# ---------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------
+validation:
+  metric: macro_roc_auc
+  skip_zero_positive_classes: true
+  eval_every_n_epochs: 1
+  early_stopping_patience: 5
+
+# ---------------------------------------------------------------------------
+# Checkpoint
+# ---------------------------------------------------------------------------
+checkpoint:
+  save_dir: /data/birdclef2026/artifacts/checkpoints
+  save_top_k: 1
+  monitor: val_macro_roc_auc
+  mode: max
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logging:
+  log_dir: /data/birdclef2026/artifacts/logs
+  log_every_n_steps: 50
+
+# ---------------------------------------------------------------------------
 # Reproducibility
 # ---------------------------------------------------------------------------
 seed: 42
