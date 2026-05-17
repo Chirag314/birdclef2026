@@ -15,12 +15,12 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Competition understanding | Done | `competition_memo.md` |
 | Deep EDA | Done | `eda/`, `reports/` |
 | Validation design | Done | GroupKFold by site, `data/folds.csv` |
-| Baseline training (5-fold) | Done | `baseline_v1`, OOF saved |
-| Phase 1a — Background noise aug | **Done** | Reptilia AUC 0.91, fold 0 |
-| Phase 1b — Mixup aug | **Running** | Est. finish ~13:53 today |
+| Baseline training (5-fold) | Done | `baseline_v1`, macro AUC 0.9248 |
+| Phase 1a — Background noise aug | Done | macro AUC **0.9412** ← best so far |
+| Phase 1b — Mixup aug | Done | macro AUC 0.9223 (below baseline) |
+| Phase 1c — BG noise + Mixup | **Running** | Combined augmentation |
 | Kaggle inference notebook | Done | `kaggle_notebook/` |
-| Phase 1 comparison & decision | Pending | After phase1b finishes |
-| Submission | Pending | After augmentation decision |
+| Submission | Pending | After phase1c |
 
 ---
 
@@ -92,12 +92,14 @@ birdclef2026/
 ### Phase 1 — Augmentation Isolation
 Goal: determine which augmentation drives CV gain before combining.
 
-| Experiment | Augmentation | Status | AUC |
-|---|---|---|---|
-| `phase1a_bg_only` | Background noise (SNR -5 to 10 dB) | Done | Reptilia 0.91 |
-| `phase1b_mixup_only` | Waveform mixup (α=0.4, p=0.5) | Running | — |
+| Experiment | Augmentation | Macro AUC |
+|---|---|---|
+| `baseline_v1` | None | 0.9248 |
+| `phase1a_bg_only` | Background noise (SNR -5 to 10 dB) | **0.9412** |
+| `phase1b_mixup_only` | Waveform mixup (α=0.4, p=0.5) | 0.9223 |
+| `phase1c_bg_mixup` | BG noise + Mixup combined | Running |
 
-Next: compare phase1a vs phase1b vs baseline OOF AUC, then decide combination strategy.
+**Finding:** Background noise augmentation alone gives the biggest gain (+1.6% over baseline). Mixup alone underperforms. Phase1c tests whether combining both helps further.
 
 ---
 
@@ -139,8 +141,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ## Next Steps
 
-1. Wait for phase1b to finish (~13:53)
-2. Compare OOF AUC: baseline vs phase1a vs phase1b
-3. Decide augmentation strategy (combine? pick one? tune SNR?)
-4. Train combined augmentation model
-5. Export best checkpoint and submit
+1. ~~Wait for phase1b~~ Done
+2. ~~Compare OOF AUC~~ Done — phase1a wins (0.9412)
+3. ~~Decide augmentation strategy~~ Testing combined (phase1c)
+4. Export best checkpoint and submit

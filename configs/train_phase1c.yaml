@@ -1,0 +1,11 @@
+# train_phase1c.yaml — Phase 1c: Background noise + Mixup combined
+experiment_name: phase1c_bg_mixup
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+  mixup:
+    enabled: true
+    alpha: 0.4
+    prob: 0.5
