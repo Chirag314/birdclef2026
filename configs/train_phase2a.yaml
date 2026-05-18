@@ -1,0 +1,18 @@
+# train_phase2a.yaml — Phase 2a: SpecAugment on top of phase1a (best)
+# Base: phase1a_bg_only (OOF AUC 0.9412) + SpecAugment
+# Finding: bg noise alone > combined > mixup alone > baseline
+
+experiment_name: phase2a_specaug
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+  mixup:
+    enabled: false
+  spec_augment:
+    enabled: true
+    freq_mask_param: 13
+    time_mask_param: 40
+    n_freq_masks: 2
+    n_time_masks: 2

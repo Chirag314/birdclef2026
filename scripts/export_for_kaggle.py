@@ -64,17 +64,33 @@ def main():
     # Save label encoder (class index → label mapping)
     taxonomy_df = get_taxonomy_df(cfg["paths"]["taxonomy_csv"])
     label_encoder = build_label_encoder(taxonomy_df)
-    # label_encoder is {primary_label: class_index} — sort by index for ordered list
     classes = sorted(label_encoder, key=label_encoder.get)
     le_path = out_dir / "label_encoder.json"
     with open(le_path, "w") as f:
         json.dump({"classes": classes}, f, indent=2)
     print(f"Label encoder saved → {le_path}")
 
+    # Copy src/ so inference.py can import from it on Kaggle
+    repo_root = Path(__file__).parent.parent
+    src_dst = out_dir / "src"
+    if src_dst.exists():
+        shutil.rmtree(src_dst)
+    shutil.copytree(repo_root / "src", src_dst,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    print(f"src/ copied → {src_dst}")
+
+    # Write dataset-metadata.json for kaggle datasets version
+    meta = {"title": "birdclef2026-model", "id": "cid007/birdclef2026-model",
+            "licenses": [{"name": "CC0-1.0"}]}
+    meta_path = out_dir / "dataset-metadata.json"
+    with open(meta_path, "w") as f:
+        json.dump(meta, f, indent=2)
+    print(f"Dataset metadata saved → {meta_path}")
+
     print(f"\nExport complete: {out_dir}")
-    print(f"  {n_copied} fold checkpoints")
-    print(f"\nUpload '{out_dir}' as a Kaggle dataset named: birdclef2026-model")
-    print("Then set paths.model_dir = /kaggle/input/birdclef2026-model in inference notebook.")
+    print(f"  {n_copied} fold checkpoints, src/ included")
+    print(f"\nTo upload: kaggle datasets version -p {out_dir} -m '{exp}'")
+    print("Inference notebook dataset: cid007/birdclef2026-model")
 
 
 if __name__ == "__main__":

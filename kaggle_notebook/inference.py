@@ -45,8 +45,20 @@ print(f"MODEL_DIR: {MODEL_DIR}")
 print(f"DATA_DIR: {DATA_DIR}")
 print("MODEL_DIR files:", [p.name for p in MODEL_DIR.iterdir()])
 
-# src/ is a subdirectory in the model dataset
-sys.path.insert(0, str(MODEL_DIR))
+# src/ may be a directory or a zip (kaggle datasets version --dir-mode zip creates src.zip)
+import tempfile
+_src_dir = MODEL_DIR / "src"
+_src_zip = MODEL_DIR / "src.zip"
+if _src_dir.is_dir():
+    sys.path.insert(0, str(MODEL_DIR))
+elif _src_zip.exists():
+    _tmpdir = tempfile.mkdtemp()
+    with zipfile.ZipFile(_src_zip) as _z:
+        _z.extractall(_tmpdir)
+    sys.path.insert(0, _tmpdir)
+    print(f"Extracted src.zip to {_tmpdir}")
+else:
+    raise RuntimeError(f"src/ not found in {MODEL_DIR}. Files: {[p.name for p in MODEL_DIR.iterdir()]}")
 
 TEST_DIR        = DATA_DIR / "test_soundscapes"
 TAXONOMY_CSV    = DATA_DIR / "taxonomy.csv"
