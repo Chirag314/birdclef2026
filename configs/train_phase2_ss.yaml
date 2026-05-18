@@ -1,0 +1,27 @@
+# train_phase2_ss.yaml — Phase 2: Soundscape-aware training
+#
+# Key changes vs phase1a:
+#   1. validation_strategy: soundscape_holdout — val = held-out soundscape files
+#      (honest proxy for LB; CV on clips was +0.15 optimistic)
+#   2. soundscape_oversample_factor: 10 — each soundscape window drawn 10x more
+#      often than a clip window (soundscapes are 1478 vs 35k clips)
+#   3. min_rating: 3.0 — drop low-quality clips (25% of clips have rating=0)
+#   4. Background noise augmentation kept (best aug from phase1)
+#
+# Expected: CV will drop vs phase1a (0.94 → ~0.80) but track LB more honestly.
+
+experiment_name: phase2_ss_aware
+
+data:
+  use_train_soundscapes: true
+  min_rating: 3.0
+  validation_strategy: soundscape_holdout
+  soundscape_val_fraction: 0.2
+  soundscape_oversample_factor: 10
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+  mixup:
+    enabled: false

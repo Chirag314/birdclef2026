@@ -94,9 +94,28 @@ def build_optimizer_scheduler(model, config, steps_per_epoch: int):
 
 
 def get_sampler(window_df: pd.DataFrame, config: dict):
-    """Optional weighted sampler for rare species oversampling (Phase 2+)."""
-    # Phase 0: uniform sampling
-    return None
+    """WeightedRandomSampler that oversamples soundscape windows.
+
+    soundscape_oversample_factor N means each soundscape window is drawn
+    N times as often as a clip window per epoch.
+    """
+    factor = config.get("data", {}).get("soundscape_oversample_factor", 1)
+    if factor <= 1 or "source" not in window_df.columns:
+        return None
+    weights = window_df["source"].map(
+        lambda s: float(factor) if str(s) == "soundscape" else 1.0
+    ).values
+    sampler = WeightedRandomSampler(
+        weights=weights,
+        num_samples=len(weights),
+        replacement=True,
+    )
+    n_ss = (window_df["source"] == "soundscape").sum()
+    n_cl = len(window_df) - n_ss
+    _log = logging.getLogger("train")
+    _log.info(f"WeightedSampler: {n_cl} clips (w=1) + {n_ss} soundscapes "
+              f"(w={factor}) | effective SS rate ~{factor*n_ss/(n_cl+factor*n_ss):.1%}")
+    return sampler
 
 
 def main():
@@ -179,22 +198,48 @@ def main():
         sys.exit(1)
     folds_df = pd.read_csv(folds_path)
 
-    clip_windows = merge_folds(clip_windows, folds_df)
-    if not ss_windows.empty:
-        ss_windows = merge_folds(ss_windows, folds_df)
-        all_windows = pd.concat([clip_windows, ss_windows], ignore_index=True)
+    val_strategy = cfg["data"].get("validation_strategy", "kfold")
+
+    if val_strategy == "soundscape_holdout":
+        # Val = held-out soundscape files; Train = all clips + remaining soundscapes.
+        # Splits soundscape FILES (not windows) to avoid data leakage within a recording.
+        if ss_windows.empty:
+            logger.error("soundscape_holdout requires use_train_soundscapes=true")
+            sys.exit(1)
+        val_frac = cfg["data"].get("soundscape_val_fraction", 0.2)
+        ss_files = ss_windows["filepath"].unique()
+        rng = np.random.default_rng(cfg.get("seed", 42))
+        val_files = set(rng.choice(ss_files, size=int(len(ss_files) * val_frac),
+                                   replace=False))
+        ss_val  = ss_windows[ss_windows["filepath"].isin(val_files)].copy()
+        ss_train = ss_windows[~ss_windows["filepath"].isin(val_files)].copy()
+        clip_windows["fold"] = 0   # assign dummy fold so downstream code works
+        ss_train["fold"] = 0
+        ss_val["fold"] = -1        # held-out marker
+        all_windows = pd.concat([clip_windows, ss_train, ss_val], ignore_index=True)
+        all_windows["fold"] = all_windows["fold"].astype(int)
+        n_folds = 1
+        fold_range = [0]
+        logger.info(f"soundscape_holdout: {len(ss_val)} val windows from "
+                    f"{len(val_files)} files | {len(clip_windows)+len(ss_train)} train windows")
     else:
-        all_windows = clip_windows
+        clip_windows = merge_folds(clip_windows, folds_df)
+        if not ss_windows.empty:
+            ss_windows = merge_folds(ss_windows, folds_df)
+            all_windows = pd.concat([clip_windows, ss_windows], ignore_index=True)
+        else:
+            all_windows = clip_windows
 
-    # Drop windows with no fold assignment
-    no_fold = all_windows["fold"].isna()
-    if no_fold.sum() > 0:
-        logger.warning(f"Dropping {no_fold.sum()} windows without fold assignment")
-        all_windows = all_windows[~no_fold].copy()
-    all_windows["fold"] = all_windows["fold"].astype(int)
+        # Drop windows with no fold assignment
+        no_fold = all_windows["fold"].isna()
+        if no_fold.sum() > 0:
+            logger.warning(f"Dropping {no_fold.sum()} windows without fold assignment")
+            all_windows = all_windows[~no_fold].copy()
+        all_windows["fold"] = all_windows["fold"].astype(int)
 
-    n_folds = folds_df["fold"].nunique()
-    fold_range = [args.fold] if args.fold is not None else list(range(n_folds))
+        n_folds = folds_df["fold"].nunique()
+        fold_range = [args.fold] if args.fold is not None else list(range(n_folds))
+
     logger.info(f"Running folds: {fold_range}")
 
     # OOF accumulator
@@ -243,27 +288,37 @@ def main():
         logger.info(f"\n{'='*60}\nStarting fold {fold}\n{'='*60}")
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
-        train_mask = all_windows["fold"] != fold
-        val_mask = all_windows["fold"] == fold
+        if val_strategy == "soundscape_holdout":
+            train_mask = all_windows["fold"] == 0
+            val_mask   = all_windows["fold"] == -1
+        else:
+            train_mask = all_windows["fold"] != fold
+            val_mask   = all_windows["fold"] == fold
+
         train_win = all_windows[train_mask].reset_index(drop=True)
-        val_win = all_windows[val_mask].reset_index(drop=True)
+        val_win   = all_windows[val_mask].reset_index(drop=True)
         val_indices = all_windows[val_mask].index.values
 
-        logger.info(f"Fold {fold}: train={len(train_win)} | val={len(val_win)}")
+        ss_in_train = (train_win.get("source", "") == "soundscape").sum()
+        ss_in_val   = (val_win.get("source", "") == "soundscape").sum()
+        logger.info(f"Fold {fold}: train={len(train_win)} "
+                    f"(clips={len(train_win)-ss_in_train}, ss={ss_in_train}) | "
+                    f"val={len(val_win)} (clips={len(val_win)-ss_in_val}, ss={ss_in_val})")
 
         augmenter = Augmenter(cfg, background_pool=bg_pool, window_df=train_win)
 
-        train_ds = WindowDataset(train_win, cfg, augmenter=augmenter,
-                                 is_train=True)
-        val_ds = WindowDataset(val_win, cfg, augmenter=None, is_train=False)
+        train_ds = WindowDataset(train_win, cfg, augmenter=augmenter, is_train=True)
+        val_ds   = WindowDataset(val_win,   cfg, augmenter=None,      is_train=False)
 
         bs = cfg["training"]["batch_size"]
         nw = cfg["training"].get("num_workers", 4)
         if args.dry_run:
-            nw = 0  # avoid fork overhead in dry run
+            nw = 0
 
+        sampler = get_sampler(train_win, cfg)
         train_loader = DataLoader(
-            train_ds, batch_size=bs, shuffle=True,
+            train_ds, batch_size=bs,
+            shuffle=(sampler is None), sampler=sampler,
             num_workers=nw, pin_memory=(device == "cuda"),
             drop_last=True,
         )
