@@ -45,20 +45,20 @@ print(f"MODEL_DIR: {MODEL_DIR}")
 print(f"DATA_DIR: {DATA_DIR}")
 print("MODEL_DIR files:", [p.name for p in MODEL_DIR.iterdir()])
 
-# src/ may be a directory or a zip (kaggle datasets version --dir-mode zip creates src.zip)
-import tempfile
-_src_dir = MODEL_DIR / "src"
-_src_zip = MODEL_DIR / "src.zip"
-if _src_dir.is_dir():
+# Locate src/ — Kaggle extracts src.zip into src/src/ (double-nested) so we
+# try both layouts: MODEL_DIR/src/features.py and MODEL_DIR/src/src/features.py
+_src_direct  = MODEL_DIR / "src" / "features.py"       # flat layout
+_src_nested  = MODEL_DIR / "src" / "src" / "features.py"  # zip-extracted layout
+if _src_direct.exists():
     sys.path.insert(0, str(MODEL_DIR))
-elif _src_zip.exists():
-    _tmpdir = tempfile.mkdtemp()
-    with zipfile.ZipFile(_src_zip) as _z:
-        _z.extractall(_tmpdir)
-    sys.path.insert(0, _tmpdir)
-    print(f"Extracted src.zip to {_tmpdir}")
+    print("src/ found at MODEL_DIR/src/ (flat)")
+elif _src_nested.exists():
+    sys.path.insert(0, str(MODEL_DIR / "src"))
+    print("src/ found at MODEL_DIR/src/src/ (zip-extracted)")
 else:
-    raise RuntimeError(f"src/ not found in {MODEL_DIR}. Files: {[p.name for p in MODEL_DIR.iterdir()]}")
+    raise RuntimeError(
+        f"src/features.py not found. MODEL_DIR files: {[p.name for p in MODEL_DIR.iterdir()]}"
+    )
 
 TEST_DIR        = DATA_DIR / "test_soundscapes"
 TAXONOMY_CSV    = DATA_DIR / "taxonomy.csv"
