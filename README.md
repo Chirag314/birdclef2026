@@ -139,9 +139,21 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ---
 
+
+## Public LB Result
+
+| Submission | CV AUC | Public LB | Gap |
+|---|---|---|---|
+| phase1a_bg_only (5-fold) | 0.9412 | **0.789** | -0.152 |
+
+**Root cause of gap:** domain shift. Training is 35,549 focal clips (206 species), test is Pantanal soundscapes. Only 12 species overlap between clip-training and soundscape-label domains. CV on clips is optimistic by ~0.15.
+
+**New direction:** soundscape-aware training — oversample soundscape windows, soundscape-based validation, fine-tune on soundscape distribution.
+
 ## Next Steps
 
-1. ~~Wait for phase1b~~ Done
-2. ~~Compare OOF AUC~~ Done — phase1a wins (0.9412)
-3. ~~Decide augmentation strategy~~ Testing combined (phase1c)
-4. Export best checkpoint and submit
+1. ~~Augmentation isolation~~ Done — phase1a bg noise wins (CV 0.9412)
+2. ~~Submit~~ Done — public LB 0.789 reveals domain shift gap
+3. **Soundscape-aware training** — oversample soundscapes 10x, soundscape-based CV
+4. Fine-tune on soundscapes, filter low-quality clips (rating=0)
+5. Re-submit with soundscape-aware model
