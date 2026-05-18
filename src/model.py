@@ -147,7 +147,7 @@ def count_parameters(model: nn.Module) -> dict:
 def load_checkpoint(model: nn.Module, checkpoint_path: str,
                     device: str = "cpu") -> dict:
     """Load a checkpoint and return the saved metadata dict."""
-    ckpt = torch.load(checkpoint_path, map_location=device)
+    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model.load_state_dict(ckpt["model_state_dict"])
     return ckpt
 
