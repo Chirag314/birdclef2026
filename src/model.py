@@ -110,18 +110,23 @@ class BirdCLEFModel(nn.Module):
         nn.init.xavier_uniform_(self.head.weight)
         nn.init.zeros_(self.head.bias)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor,
+                return_features: bool = False):
         """
         Args:
-            x: (B, 1, n_mels, time_frames) log-mel spectrogram
+            x:               (B, 1, n_mels, time_frames) log-mel spectrogram
+            return_features: When True, also return pre-dropout pooled features
+                             for use with PerchAlignmentLoss.
 
         Returns:
-            logits: (B, n_classes) raw logits (apply sigmoid for probabilities)
+            logits           when return_features=False  (B, n_classes)
+            (logits, pooled) when return_features=True   pooled: (B, feat_dim)
         """
-        features = self.backbone(x)   # (B, C, H', W')
-        pooled = self.pool(features)  # (B, C)
-        pooled = self.dropout(pooled)
-        logits = self.head(pooled)    # (B, n_classes)
+        features = self.backbone(x)          # (B, C, H', W')
+        pooled   = self.pool(features)       # (B, C)  pre-dropout
+        logits   = self.head(self.dropout(pooled))  # (B, n_classes)
+        if return_features:
+            return logits, pooled
         return logits
 
     def get_feature_dim(self) -> int:
