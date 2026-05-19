@@ -1,0 +1,23 @@
+# train_phase2b_ss.yaml — Phase 2b: Soundscape-aware, all clips, gentler oversample
+#
+# Changes vs phase2_ss:
+#   - min_rating: 0.0  (restore all 35k clips — removing 40% hurt LB)
+#   - soundscape_oversample_factor: 5  (was 10 — gentler to avoid SS overfitting)
+#   - 5 folds  (was 1 — ensemble effect likely worth 0.02-0.03 LB)
+#   - soundscape_holdout validation kept for honest CV
+
+experiment_name: phase2b_ss
+
+data:
+  use_train_soundscapes: true
+  min_rating: 0.0
+  validation_strategy: soundscape_holdout
+  soundscape_val_fraction: 0.2
+  soundscape_oversample_factor: 5
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+  mixup:
+    enabled: false

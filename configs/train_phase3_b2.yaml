@@ -1,0 +1,21 @@
+# train_phase3_b2.yaml — Phase 3: EfficientNet-B2 backbone
+# Base: phase1a (best config) with B2 instead of B0
+# Hypothesis: +capacity gives +0.02-0.04 LB regardless of domain shift
+
+experiment_name: phase3_b2
+
+model:
+  backbone: efficientnet_b2
+  pretrained: true
+  in_channels: 1
+  head: linear
+  pool: gem
+  gem_p: 3.0
+  dropout: 0.3
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+  mixup:
+    enabled: false
