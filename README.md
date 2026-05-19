@@ -19,7 +19,7 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Phase 1 — Augmentation isolation | Done | bg noise best (CV 0.9412, LB 0.789) |
 | Phase 2 — Soundscape-aware training | Done | No improvement — see findings |
 | Phase 3 — EfficientNet-B2 | Done | B2 5-fold LB=0.753 — **worse** than B0 |
-| Phase 4 — Label smoothing (B0) | **Running** | Targeting overconfidence on clips |
+| Phase 4 — Label smoothing (B0) | **Running folds 1-4** | fold0 LB=**0.818** ← new best! |
 | Kaggle inference notebook | Done | `kaggle_notebook/` |
 
 ---
@@ -34,7 +34,8 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | phase2b_ss | B0 | 1 | 0.7883 (SS holdout) | 0.774 |
 | phase3_b2 | **B2** | 1 | 0.9604 | 0.774 |
 | phase3_b2 | **B2** | 5 | 0.9590 avg | 0.753 ← worse than B0! |
-| phase4_ls | B0 | 1 | TBD | TBD |
+| phase4_ls | B0 | 1 | 0.9289 | **0.818** ← NEW BEST (+0.029) |
+| phase4_ls | B0 | 5 | — | ~0.833 est. (folds 1-4 running) |
 
 ---
 
@@ -64,10 +65,14 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 - B4 or larger would make this worse, not better
 - Ruled out: capacity increase as the path to improvement
 
-### Root cause (confirmed)
-Higher clip CV reliably predicts worse LB. The model is overconfident
-on easy clip examples. This overconfidence does NOT transfer to soundscapes.
-**Fix: reduce overconfidence directly — label smoothing (phase 4).**
+### Root cause (confirmed) + Fix found
+Higher clip CV = more overconfidence on clips = worse LB.
+**Label smoothing (0.05) fixes this directly:**
+- Clip CV drops: 0.940 → 0.929 (less memorization)
+- LB jumps: 0.774 → **0.818** (+0.029 from 1 fold alone)
+- 5-fold expected: ~0.833
+
+**This is the single biggest LB improvement found.**
 
 ---
 
@@ -142,6 +147,6 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 1. ~~Phase 1: augmentation~~ Done — bg noise best (LB 0.789)
 2. ~~Phase 2: soundscape oversampling~~ Done — no improvement
 3. ~~Phase 3: B2 backbone~~ Done — worse (LB 0.753), rules out capacity
-4. **Phase 4: label smoothing (B0)** — running, targets clip overconfidence
-5. If label smoothing helps: combine with bg noise aug, 5-fold
-6. Future: SpecAugment, focal loss, audio-pretrained backbone
+4. ~~Phase 4 fold0: label smoothing~~ Done — LB **0.818** (+0.029, new best!)
+5. **Phase 4 folds 1-4** — running now, est. 5-fold LB ~0.833
+6. Next: SpecAugment on top of label smoothing, then B2+smoothing
