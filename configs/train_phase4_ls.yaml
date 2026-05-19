@@ -1,0 +1,24 @@
+# train_phase4_ls.yaml — Phase 4: Label smoothing on B0
+#
+# Hypothesis: B2 5-fold (CV=0.959) LB=0.753 < B0 5-fold (CV=0.941) LB=0.789
+# Higher clip CV = more overconfident on clips = worse soundscape LB.
+# Label smoothing prevents extreme logit values on easy clips,
+# reducing overconfidence and potentially closing the CV-LB gap.
+#
+# Base: phase1a (best config — B0 + bg noise aug + all clips)
+# Change: label_smoothing 0.0 -> 0.05
+
+experiment_name: phase4_ls
+
+model:
+  backbone: efficientnet_b0
+
+loss:
+  label_smoothing: 0.05
+
+augmentation:
+  background_noise:
+    enabled: true
+    snr_db_range: [-5.0, 10.0]
+  mixup:
+    enabled: false

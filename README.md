@@ -18,7 +18,8 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Baseline training (5-fold) | Done | `baseline_v1`, clip CV 0.9248 |
 | Phase 1 — Augmentation isolation | Done | bg noise best (CV 0.9412, LB 0.789) |
 | Phase 2 — Soundscape-aware training | Done | No improvement — see findings |
-| Phase 3 — EfficientNet-B2 | **Running** | Folds 1-4 in progress (~20 hrs) |
+| Phase 3 — EfficientNet-B2 | Done | B2 5-fold LB=0.753 — **worse** than B0 |
+| Phase 4 — Label smoothing (B0) | **Running** | Targeting overconfidence on clips |
 | Kaggle inference notebook | Done | `kaggle_notebook/` |
 
 ---
@@ -31,8 +32,9 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | phase1a_bg_only | B0 | 5 | 0.9412 | **0.789** ← best |
 | phase2_ss_aware | B0 | 1 | 0.8220 (SS holdout) | 0.756 |
 | phase2b_ss | B0 | 1 | 0.7883 (SS holdout) | 0.774 |
-| phase3_b2 | **B2** | 1 | **0.9604** | 0.774 |
-| phase3_b2 | **B2** | 5 | — | **TBD (~0.795-0.805?)** |
+| phase3_b2 | **B2** | 1 | 0.9604 | 0.774 |
+| phase3_b2 | **B2** | 5 | 0.9590 avg | 0.753 ← worse than B0! |
+| phase4_ls | B0 | 1 | TBD | TBD |
 
 ---
 
@@ -55,11 +57,17 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 - 5-fold ensemble worth exactly +0.015 LB (0.774→0.789 for B0)
 - Every experiment with 1 fold scores 0.774 on public LB
 
-### Backbone capacity (Phase 3)
-- EfficientNet-B2 (8M params) vs B0 (4.3M params)
-- B2 fold0 CV: 0.9604 vs B0 fold0 CV: ~0.94 (+0.02)
-- B2 fold0 LB = B0 fold0 LB = 0.774 (ensemble needed to see benefit)
-- **Hypothesis:** B2 5-fold should score ~0.795-0.805
+### Backbone capacity (Phase 3) — NEGATIVE RESULT
+- B2 (8M params) CV=0.9590 avg, LB=0.753 — WORSE than B0 5-fold (0.789)
+- CV-LB gap: B0=0.152, B2=0.206 — B2 overfits clips MORE aggressively
+- **Conclusion: bigger model = more clip overfitting = worse soundscape LB**
+- B4 or larger would make this worse, not better
+- Ruled out: capacity increase as the path to improvement
+
+### Root cause (confirmed)
+Higher clip CV reliably predicts worse LB. The model is overconfident
+on easy clip examples. This overconfidence does NOT transfer to soundscapes.
+**Fix: reduce overconfidence directly — label smoothing (phase 4).**
 
 ---
 
@@ -131,7 +139,9 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ## Next Steps
 
-1. ~~Phase 3 B2 fold0~~ Done — CV 0.9604, LB 0.774
-2. **Phase 3 B2 folds 1-4** — running now (~20 hrs), submit 5-fold ensemble
-3. If B2 5-fold > 0.789: try B4 or add SpecAugment on top of B2
-4. If B2 5-fold ≤ 0.789: investigate other axes (label smoothing, resolution, pseudo-labels)
+1. ~~Phase 1: augmentation~~ Done — bg noise best (LB 0.789)
+2. ~~Phase 2: soundscape oversampling~~ Done — no improvement
+3. ~~Phase 3: B2 backbone~~ Done — worse (LB 0.753), rules out capacity
+4. **Phase 4: label smoothing (B0)** — running, targets clip overconfidence
+5. If label smoothing helps: combine with bg noise aug, 5-fold
+6. Future: SpecAugment, focal loss, audio-pretrained backbone
