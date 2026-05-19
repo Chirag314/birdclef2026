@@ -39,25 +39,40 @@ This is mainly a domain-shift + weak-supervision problem:
 - missing-class strategy
 - efficient inference path
 
-## Current Baseline Status
-- baseline exists and submits successfully
-- rank is still low, so major gains likely come from validation, alignment, and domain adaptation rather than small tuning
+## Confirmed LB Results
 
-## Working Hypotheses To Test
-1. Better grouped CV will improve LB correlation
-2. Time-aware heads should beat naive clip pooling
-3. Soundscape-focused negatives / augmentation should reduce false positives
-4. Sparse-class handling needs dedicated attention
-5. Older BirdCLEF data may help selectively, but not by blind mixing
-6. Heavy ensemble should wait until strong single models exist
+| Experiment | LB | Notes |
+|---|---|---|
+| baseline_v1 B0 5-fold | — | clip CV 0.9248 |
+| phase1a bg noise aug 5-fold | 0.789 | best before label smoothing |
+| phase2 SS oversampling | 0.756–0.774 | hurt LB — wrong soundscapes |
+| phase3 B2 backbone 5-fold | 0.753 | higher CV = more overfitting |
+| **phase4 B0 label_smooth=0.05** | **0.818** | **+0.029 breakthrough** |
+| phase4 5-fold (est.) | ~0.833 | in progress |
 
-## Current Experiment Order
-1. CV refinement
-2. Sparse / zero-clip class audit
-3. Time-aware head experiment
-4. Soundscape-domain augmentation / negatives
-5. Distillation experiment
-6. Selective ensemble experiment
+## Root Cause of CV→LB Gap (Confirmed)
+The model was overconfident on easy focal clips (high clip CV) but this certainty
+did not transfer to messy Pantanal soundscapes (low LB). Label smoothing directly
+reduced overconfidence and improved LB by +0.029 from a single fold.
+
+Higher clip CV reliably predicted worse LB throughout all experiments.
+
+## Working Hypotheses — Updated
+1. [CONFIRMED] Label smoothing fixes overconfidence → +0.029 LB from 1 fold
+2. [CONFIRMED] Soundscape oversampling hurts — training SS ≠ test SS distribution
+3. [CONFIRMED] Bigger backbone = more overfitting = worse LB (B2 proven)
+4. [ACTIVE] Perch v2 distillation should bridge the remaining domain gap
+5. [ACTIVE] Site×Hour prior at inference = free +LB from spatial-temporal context
+6. [PENDING] Zero-clip class handling — 25+ insect/amphibian classes near-blind
+7. [DEFERRED] Rank-aware power scaling — unverified against our distribution
+
+## Current Experiment Order (15-day sprint)
+1. Phase 4 5-fold baseline lock (~0.833 LB) — running
+2. Site×Hour prior inference post-processing — implemented in src/postprocess.py
+3. Perch v2 embedding precompute — 64GB RAM can hold all training embeddings
+4. Perch distillation 1-fold LB check (PerchAlignmentLoss already in losses.py)
+5. If Perch helps: 5-fold Perch distillation + combine with Site×Hour prior
+6. Zero-clip class audit and soundscape-conditioning strategy
 
 ## Constraints
 - local: RTX 3060 12GB, 64GB RAM

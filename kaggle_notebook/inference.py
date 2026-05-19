@@ -65,6 +65,7 @@ TAXONOMY_CSV    = DATA_DIR / "taxonomy.csv"
 SAMPLE_SUB      = DATA_DIR / "sample_submission.csv"
 TRAIN_CONFIG    = MODEL_DIR / "train_config.yaml"
 LABEL_ENCODER   = MODEL_DIR / "label_encoder.json"
+SITE_HOUR_PRIOR = MODEL_DIR / "site_hour_prior.npz"
 
 TIME_LIMIT = 5100  # seconds (90 min = 5400; stop at 5100 for safety)
 BATCH_SIZE = 64
@@ -124,6 +125,17 @@ while (MODEL_DIR / f"fold{fold}_best.pt").exists():
     fold += 1
 
 logger.info(f"Ensemble size: {len(fold_models)} folds")
+
+# ---------------------------------------------------------------------------
+# Site×Hour prior (optional — gracefully skipped if file not present)
+# ---------------------------------------------------------------------------
+site_hour_prior = None
+if SITE_HOUR_PRIOR.exists():
+    from src.postprocess import SiteHourPrior
+    site_hour_prior = SiteHourPrior.load(str(SITE_HOUR_PRIOR))
+    logger.info(f"Site×Hour prior loaded: {len(site_hour_prior.sites)} sites")
+else:
+    logger.info("Site×Hour prior not found — skipping (add site_hour_prior.npz to model dataset)")
 
 # ---------------------------------------------------------------------------
 # Inference loop
@@ -199,6 +211,12 @@ if not all_probs:
     raise SystemExit(0)
 
 all_probs = np.concatenate(all_probs, axis=0)
+
+# Apply Site×Hour prior if available
+if site_hour_prior is not None:
+    all_probs = site_hour_prior.apply(all_probs, all_row_ids)
+    logger.info("Site×Hour prior applied.")
+
 submission = pd.DataFrame(all_probs, columns=class_cols)
 submission.insert(0, "row_id", all_row_ids)
 

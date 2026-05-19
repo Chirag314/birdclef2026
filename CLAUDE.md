@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 ## BirdCLEF 2026 — Current Phase
-We already completed baseline setup, competition understanding, and major EDA.
-Current goal: improve leaderboard score through focused experiments, not broad exploration.
+Phase 4 (label smoothing, 5-fold) is locking in ~0.833 baseline. Phase 5 begins now.
+Current goal: close the remaining CV→LB gap via domain alignment and inference calibration.
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
@@ -20,21 +20,23 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 - Always rank next steps by expected LB gain, validation value, and implementation cost.
 
 ## Competition Facts To Keep In Mind
-- 234 target classes across birds, frogs, insects, mammals, reptile
-- Macro ROC-AUC style ranking task
-- Hidden test is 5-second soundscape windows
-- Training labels are mixed: clip-level focal recordings + limited labeled soundscapes
-- 28 classes have zero focal clips
-- Strong domain shift: global train clips vs Pantanal deployment soundscapes
-- Labeled soundscapes are sparse and site-imbalanced
-- Kaggle inference is CPU-only with 90-minute limit
+- 234 target classes across birds, frogs, insects, mammals, reptiles
+- Macro ROC-AUC ranking task — all 234 classes weighted equally
+- Hidden test is 5-second soundscape windows from Pantanal, Brazil
+- Training labels: 35k focal clips (206 species) + 1,478 labeled soundscape windows (251 species)
+- Only 12 species appear in BOTH focal clips AND soundscape labels
+- ~25 insect/amphibian classes have zero focal clips — model is near-blind on these
+- Strong domain shift: global iNat/XC clips vs Pantanal deployment soundscapes
+- Label smoothing (0.05) is confirmed to reduce clip overconfidence and improve LB
+- Perch v2 embeddings: 1536-dim, trained on deployment-style audio — bridges domain gap
+- Kaggle inference: CPU-only, 90-minute limit — EfficientNet-B0 fits comfortably
 
-## Current Priorities
-1. Improve CV realism and reduce leakage
-2. Improve label alignment between clip training and 5-second target
-3. Improve performance on soundscape-domain classes, especially sparse / zero-clip classes
-4. Test stronger architectures only after validation is trustworthy
-5. Keep inference path compatible with Kaggle CPU runtime
+## Current Priorities (15-day medal sprint)
+1. Lock in Phase 4 5-fold baseline (~0.833 LB) — in progress
+2. Site×Hour prior at inference — free +0.01-0.02 LB, no retraining needed
+3. Perch v2 distillation — precompute embeddings, train with dual loss, 1 fold LB check
+4. Keep EfficientNet-B0 as backbone — B2 proved to overfit worse, CPU runtime fits B0
+5. No rank-aware power scaling until probability distribution is audited empirically
 
 ## Experiment Philosophy
 - Data/validation fixes before fancy models
@@ -67,12 +69,20 @@ Always return:
 - Prefer targeted prompts over broad planning prompts
 
 ## Current High-ROI Experiment Queue
-1. Site-aware / leakage-safe CV refinement
-2. Soundscape-label coverage audit for zero-clip and sparse classes
-3. SED/LSE or other time-aware head vs plain clip pooling
-4. Soundscape-focused augmentation / negatives
-5. Distillation only if baseline CV is stable
-6. Ensemble only after at least 2 genuinely different strong models exist
+1. [DONE] Phase 4 fold0: label smoothing — LB 0.818 (+0.029, biggest single gain)
+2. [RUNNING] Phase 4 folds 1-4 — est. 5-fold LB ~0.833
+3. [DONE] Site×Hour prior — src/postprocess.py built, wire into inference.py
+4. Perch v2 embedding precompute — run all training clips through Perch, save .npy
+5. Perch distillation 1-fold LB check — losses.py already has PerchAlignmentLoss
+6. If Perch distillation helps: 5-fold + combine with Site×Hour prior
+7. Zero-clip class audit — 25+ insect/amphibian classes with no focal clips; target with soundscape conditioning
+
+## What We've Ruled Out
+- Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
+- Bigger backbone (phase 3 B2): higher clip CV = more overfitting = worse LB
+- Mixup augmentation: hurts CV and LB
+- SpecAugment: deprioritised — overconfidence was the real bottleneck, now fixed by label smoothing
+- Rank-aware power scaling (p=0.6): unverified — our problem was OVERconfidence, squashing toward 1 would likely hurt
 
 ## Anti-Patterns
 - Don’t recommend generic BirdCLEF tricks without tying them to this repo
