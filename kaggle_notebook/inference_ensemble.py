@@ -195,7 +195,7 @@ def predict_batch(audio_batch: list) -> np.ndarray:
         audio_norm = peak_normalize(pad_or_trim(audio, WIN_LEN))
         lm = log_mel_extractor(audio_norm)   # (1, n_mels, T)
         log_mels.append(lm)
-    log_mel_batch = torch.cat(log_mels, dim=0)  # (B, n_mels, T)
+    log_mel_batch = torch.stack(log_mels, dim=0)  # (B, 1, n_mels, T)
 
     enf_fold_preds = []
     with torch.no_grad():
@@ -264,7 +264,9 @@ for file_idx, filepath in enumerate(test_files):
             all_row_ids.extend(row_ids)
 
     except Exception as e:
+        import traceback
         logger.error(f"Error on {filepath.name}: {e}")
+        logger.error(traceback.format_exc())
         try:
             n_windows = max(1, int(sf.info(str(filepath)).duration // 5))
         except Exception:
