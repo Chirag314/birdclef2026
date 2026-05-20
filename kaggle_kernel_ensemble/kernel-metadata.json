@@ -1,0 +1,17 @@
+{
+  "id": "cid007/birdclef-2026-ensemble-inference",
+  "title": "BirdCLEF 2026 Ensemble: Perch MLP + EfficientNet",
+  "code_file": "inference_ensemble.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": [
+    "cid007/birdclef2026-perch",
+    "cid007/birdclef2026-model"
+  ],
+  "competition_sources": ["birdclef-2026"],
+  "kernel_sources": []
+}
