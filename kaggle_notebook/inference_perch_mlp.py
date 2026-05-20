@@ -17,20 +17,33 @@ import sys
 import time
 from pathlib import Path
 
-# onnxruntime is not pre-installed in Kaggle CPU env — install from bundled wheel
-_wheel_dir = Path("/kaggle/input/birdclef2026-perch")
-print("Dataset contents:", [p.name for p in _wheel_dir.iterdir()])
-_wheels = sorted(_wheel_dir.glob("onnxruntime*.whl"))
-if not _wheels:
-    # Try recursive search — Kaggle may extract to a subdirectory
-    _wheels = sorted(_wheel_dir.rglob("onnxruntime*.whl"))
+# Debug: show what datasets are mounted
+import os
+_input = Path("/kaggle/input")
+print("=== /kaggle/input contents ===")
+if _input.exists():
+    for p in sorted(_input.iterdir()):
+        print(f"  {p.name}/")
+else:
+    print("  /kaggle/input does NOT exist!")
+
+# onnxruntime is not pre-installed in Kaggle CPU env
+# Find the wheel anywhere under /kaggle/input
+_wheels = sorted(Path("/kaggle/input").rglob("onnxruntime*.whl"))
+print(f"onnxruntime wheels found: {[str(w) for w in _wheels]}")
 if _wheels:
-    subprocess.run([sys.executable, "-m", "pip", "install", str(_wheels[0]),
-                    "--quiet", "--no-deps"], check=True)
-    # onnxruntime needs numpy, which is already available
+    subprocess.run([sys.executable, "-m", "pip", "install", str(_wheels[0]), "--quiet"], check=True)
     print(f"Installed {_wheels[0].name}")
 else:
-    raise RuntimeError(f"onnxruntime wheel not found in {_wheel_dir}. Contents: {list(_wheel_dir.iterdir())}")
+    # No wheel found — try pip (may fail with internet=off but worth trying)
+    r = subprocess.run([sys.executable, "-m", "pip", "install", "onnxruntime", "--quiet"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(
+            f"Cannot install onnxruntime. pip stderr: {r.stderr[:500]}\n"
+            f"Available datasets: {os.listdir('/kaggle/input') if os.path.exists('/kaggle/input') else 'N/A'}"
+        )
+    print("Installed onnxruntime via pip")
 
 import numpy as np
 import pandas as pd
