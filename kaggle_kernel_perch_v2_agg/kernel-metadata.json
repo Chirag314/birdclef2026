@@ -1,0 +1,14 @@
+{
+  "id": "cid007/birdclef2026-perch-v2-agg",
+  "title": "birdclef2026-perch-v2-agg",
+  "code_file": "inference_perch_mlp.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": ["cid007/birdclef2026-perch"],
+  "competition_sources": ["birdclef-2026"],
+  "kernel_sources": []
+}
