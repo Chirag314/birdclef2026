@@ -50,6 +50,7 @@ This is mainly a domain-shift + weak-supervision problem:
 | **phase4 B0 label_smooth=0.05** | **0.818** | **+0.029 breakthrough** |
 | phase4 5-fold (est.) | ~0.833 | folds 0-3 done, fold4 running |
 | **Perch MLP 5-fold (frozen embs)** | **0.873** | **+0.055 vs phase4 1-fold; new best** |
+| Perch MLP + Site×Hour prior | 0.790 | **-0.083** — prior kills 159/234 zero-SS classes |
 
 ## Root Cause of CV→LB Gap (Confirmed)
 The model was overconfident on easy focal clips (high clip CV) but this certainty
@@ -63,7 +64,7 @@ Higher clip CV reliably predicted worse LB throughout all experiments.
 2. [CONFIRMED] Soundscape oversampling hurts — training SS ≠ test SS distribution
 3. [CONFIRMED] Bigger backbone = more overfitting = worse LB (B2 proven)
 4. [CONFIRMED] Perch frozen embeddings + MLP → 0.873 LB (+0.055 over phase4 single fold)
-5. [ACTIVE] Site×Hour prior at inference — not yet tested on Perch MLP
+5. [RULED OUT] Site×Hour prior — kills 159 zero-SS classes, -0.083 LB on Perch MLP
 6. [ACTIVE] Perch+EfficientNet ensemble — two uncorrelated architectures
 7. [PENDING] Zero-clip class handling — 25+ insect/amphibian classes near-blind
 8. [PENDING] Better Perch head — SSM/attention instead of MLP; or fine-tuned ONNX

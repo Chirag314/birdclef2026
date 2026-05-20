@@ -114,16 +114,9 @@ logger.info(f"Classes: {n_classes}")
 sample_sub = pd.read_csv(SAMPLE_SUB)
 fill_value = 1.0 / n_classes
 
-# ---------------------------------------------------------------------------
-# Site×Hour prior (optional)
-# ---------------------------------------------------------------------------
+# Site×Hour prior DISABLED: prior built from 9 training sites; test sites differ,
+# global fallback zeros 159/234 classes → -0.083 LB regression confirmed.
 site_hour_prior = None
-if SITE_HOUR_PRIOR.exists():
-    from src.postprocess import SiteHourPrior
-    site_hour_prior = SiteHourPrior.load(str(SITE_HOUR_PRIOR))
-    logger.info(f"Site×Hour prior loaded: {len(site_hour_prior.sites)} sites")
-else:
-    logger.info("Site×Hour prior not found — skipping")
 
 # ---------------------------------------------------------------------------
 # Load Perch ONNX session
