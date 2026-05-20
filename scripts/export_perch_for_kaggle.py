@@ -55,12 +55,21 @@ def main():
     shutil.copy2(LE_SRC, OUT_DIR / "label_encoder.json")
     print(f"Copied label_encoder.json")
 
-    # 4. src/perch_mlp.py — zip it so kaggle datasets version includes it
-    import zipfile, tempfile
+    # 4. onnxruntime wheel (Kaggle CPU doesn't have it pre-installed)
+    whl_src = REPO_DIR / "artifacts" / "perch" / "onnxruntime-1.24.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+    if whl_src.exists():
+        shutil.copy2(whl_src, OUT_DIR / whl_src.name)
+        print(f"Copied {whl_src.name} ({whl_src.stat().st_size//1_000_000}MB)")
+    else:
+        print(f"WARNING: onnxruntime wheel not found at {whl_src}")
+
+    # 5. src/perch_mlp.py — zip it so kaggle datasets version includes it
+    import zipfile
     zip_path = OUT_DIR / "src.zip"
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.write(REPO_DIR / "src" / "perch_mlp.py", arcname="src/perch_mlp.py")
-    print(f"Created src.zip ({zip_path.stat().st_size//1024}KB)")
+    mlp_src = REPO_DIR / "src" / "perch_mlp.py"
+    with zipfile.ZipFile(str(zip_path), "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(str(mlp_src), arcname="src/perch_mlp.py")
+    print(f"Created src.zip ({zip_path.stat().st_size} bytes, contains: {[i.filename for i in zipfile.ZipFile(str(zip_path)).infolist()]})")
 
     # 5. Dataset metadata
     meta = {
