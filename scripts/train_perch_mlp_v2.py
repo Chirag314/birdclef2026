@@ -31,6 +31,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
 from src.perch_mlp import PerchMLP
+from src.losses import AsymmetricLoss
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
@@ -92,7 +93,12 @@ def train_fold(fold_idx, X_tr, Y_tr, X_val, Y_val, X_ss_val, Y_ss_val, n_classes
     model = PerchMLP(n_classes=n_classes, dropout=args.dropout).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-5)
-    criterion = nn.BCEWithLogitsLoss()
+    if args.loss == "asl":
+        criterion = AsymmetricLoss(gamma_pos=0.0, gamma_neg=4.0, clip=0.05)
+        logger.info("Loss: AsymmetricLoss (gamma_neg=4, clip=0.05)")
+    else:
+        criterion = nn.BCEWithLogitsLoss()
+        logger.info("Loss: BCEWithLogitsLoss")
 
     tr_loader = DataLoader(
         TensorDataset(torch.from_numpy(X_tr).float(), torch.from_numpy(Y_tr).float()),
@@ -178,8 +184,15 @@ def main():
     parser.add_argument("--patience",        type=int,  default=25)
     parser.add_argument("--ss-val-frac",     type=float, default=0.2,
                         help="Fraction of SS windows held out for validation")
+    parser.add_argument("--loss",            type=str,  default="bce",
+                        choices=["bce", "asl"],
+                        help="Loss function: bce or asl (AsymmetricLoss)")
     args = parser.parse_args()
 
+    # Auto-name output dir based on loss
+    global OUT_DIR
+    if args.loss == "asl":
+        OUT_DIR = REPO_DIR / "artifacts" / "perch" / "mlp_v2_asl"
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     fold_list = [int(x) for x in args.folds.split(",")]
 
