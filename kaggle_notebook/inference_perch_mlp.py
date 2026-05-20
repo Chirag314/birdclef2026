@@ -77,8 +77,13 @@ print(f"DATA_DIR contents: {[p.name for p in DATA_DIR.iterdir()]}")
 TEST_DIR     = DATA_DIR / "test_soundscapes"
 print(f"TEST_DIR: {TEST_DIR}, exists: {TEST_DIR.exists()}")
 if TEST_DIR.exists():
+    all_files = list(TEST_DIR.iterdir())
     ogg_files = list(TEST_DIR.glob("*.ogg"))
-    print(f"  .ogg files: {len(ogg_files)}, first few: {[p.name for p in ogg_files[:3]]}")
+    print(f"  all files: {len(all_files)}, .ogg: {len(ogg_files)}")
+    print(f"  first 5 items: {[p.name for p in all_files[:5]]}")
+    # Also check with rglob in case nested
+    all_ogg_recursive = list(TEST_DIR.rglob("*.ogg"))
+    print(f"  recursive .ogg: {len(all_ogg_recursive)}")
 SAMPLE_SUB   = DATA_DIR / "sample_submission.csv"
 ONNX_PATH    = PERCH_DIR / "perch_v2.onnx"
 LE_PATH      = PERCH_DIR / "label_encoder.json"
