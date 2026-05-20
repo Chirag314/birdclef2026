@@ -48,7 +48,8 @@ This is mainly a domain-shift + weak-supervision problem:
 | phase2 SS oversampling | 0.756–0.774 | hurt LB — wrong soundscapes |
 | phase3 B2 backbone 5-fold | 0.753 | higher CV = more overfitting |
 | **phase4 B0 label_smooth=0.05** | **0.818** | **+0.029 breakthrough** |
-| phase4 5-fold (est.) | ~0.833 | in progress |
+| phase4 5-fold (est.) | ~0.833 | folds 0-3 done, fold4 running |
+| **Perch MLP 5-fold (frozen embs)** | **0.873** | **+0.055 vs phase4 1-fold; new best** |
 
 ## Root Cause of CV→LB Gap (Confirmed)
 The model was overconfident on easy focal clips (high clip CV) but this certainty
@@ -61,14 +62,24 @@ Higher clip CV reliably predicted worse LB throughout all experiments.
 1. [CONFIRMED] Label smoothing fixes overconfidence → +0.029 LB from 1 fold
 2. [CONFIRMED] Soundscape oversampling hurts — training SS ≠ test SS distribution
 3. [CONFIRMED] Bigger backbone = more overfitting = worse LB (B2 proven)
-4. [ACTIVE] Perch v2 distillation should bridge the remaining domain gap
-5. [ACTIVE] Site×Hour prior at inference = free +LB from spatial-temporal context
-6. [PENDING] Zero-clip class handling — 25+ insect/amphibian classes near-blind
-7. [DEFERRED] Rank-aware power scaling — unverified against our distribution
+4. [CONFIRMED] Perch frozen embeddings + MLP → 0.873 LB (+0.055 over phase4 single fold)
+5. [ACTIVE] Site×Hour prior at inference — not yet tested on Perch MLP
+6. [ACTIVE] Perch+EfficientNet ensemble — two uncorrelated architectures
+7. [PENDING] Zero-clip class handling — 25+ insect/amphibian classes near-blind
+8. [PENDING] Better Perch head — SSM/attention instead of MLP; or fine-tuned ONNX
 
-## Current Experiment Order (15-day sprint)
-1. Phase 4 5-fold baseline lock (~0.833 LB) — running
-2. Site×Hour prior inference post-processing — implemented in src/postprocess.py
+## Gap to Top Tier
+- Our best: 0.873 (Perch MLP 5-fold)
+- Top tier: 0.949 (508 teams tied — likely fine-tuned Perch or better head)
+- Gap: 0.076
+- Main suspects: (1) frozen vs fine-tuned Perch, (2) zero-clip classes, (3) ensemble
+
+## Current Experiment Order
+1. Phase 4 5-fold EfficientNet — fold4 running, submit to confirm ~0.833 LB
+2. Ensemble Perch MLP + EfficientNet phase4 5-fold → expected +0.01–0.02
+3. Add Site×Hour prior to Perch MLP inference → free gain
+4. Audit zero-clip class predictions — 25+ species near-blind in Perch MLP
+5. Longer/better Perch MLP training (more epochs, attention head)
 3. Perch v2 embedding precompute — 64GB RAM can hold all training embeddings
 4. Perch distillation 1-fold LB check (PerchAlignmentLoss already in losses.py)
 5. If Perch helps: 5-fold Perch distillation + combine with Site×Hour prior

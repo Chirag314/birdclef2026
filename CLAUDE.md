@@ -32,11 +32,12 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 - Kaggle inference: CPU-only, 90-minute limit — EfficientNet-B0 fits comfortably
 
 ## Current Priorities (15-day medal sprint)
-1. Lock in Phase 4 5-fold baseline (~0.833 LB) — in progress
-2. Site×Hour prior at inference — free +0.01-0.02 LB, no retraining needed
-3. Perch v2 distillation — precompute embeddings, train with dual loss, 1 fold LB check
-4. Keep EfficientNet-B0 as backbone — B2 proved to overfit worse, CPU runtime fits B0
-5. No rank-aware power scaling until probability distribution is audited empirically
+1. [DONE] Perch MLP 5-fold → 0.873 LB (new best, +0.055 over phase4)
+2. Phase4 5-fold EfficientNet finishing (~0.833) — submit for LB confirmation
+3. Ensemble Perch MLP + EfficientNet phase4 → expected +0.01–0.02
+4. Site×Hour prior on Perch MLP inference → free gain, already built
+5. Zero-clip class audit — 25+ species near-blind, fix before further tuning
+6. Target: 0.949 tier (top 300 gold medal) — gap is 0.076
 
 ## Experiment Philosophy
 - Data/validation fixes before fancy models
@@ -69,13 +70,16 @@ Always return:
 - Prefer targeted prompts over broad planning prompts
 
 ## Current High-ROI Experiment Queue
-1. [DONE] Phase 4 fold0: label smoothing — LB 0.818 (+0.029, biggest single gain)
-2. [RUNNING] Phase 4 folds 1-4 — est. 5-fold LB ~0.833
-3. [DONE] Site×Hour prior — src/postprocess.py built, wire into inference.py
-4. Perch v2 embedding precompute — run all training clips through Perch, save .npy
-5. Perch distillation 1-fold LB check — losses.py already has PerchAlignmentLoss
-6. If Perch distillation helps: 5-fold + combine with Site×Hour prior
-7. Zero-clip class audit — 25+ insect/amphibian classes with no focal clips; target with soundscape conditioning
+1. [DONE] Phase 4 fold0: label smoothing — LB 0.818 (+0.029)
+2. [RUNNING] Phase 4 folds 1-4 — fold4 still training
+3. [DONE] Site×Hour prior — src/postprocess.py built
+4. [DONE] Perch v2 embeddings extracted — (35549, 1536) clips + (1478, 1536) soundscapes
+5. [DONE] Perch MLP 5-fold trained — OOF 0.977, **LB 0.873** (new best)
+6. [DONE] cid007/birdclef2026-perch dataset uploaded — self-contained, no 3rd-party deps
+7. [NEXT] Ensemble Perch MLP + EfficientNet phase4 in inference notebook
+8. [NEXT] Add Site×Hour prior to Perch MLP inference (already in src/postprocess.py)
+9. [NEXT] Zero-clip class audit and fix
+10. [FUTURE] Better Perch head (attention/SSM), fine-tuned Perch
 
 ## What We've Ruled Out
 - Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
