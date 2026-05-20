@@ -49,8 +49,9 @@ This is mainly a domain-shift + weak-supervision problem:
 | phase3 B2 backbone 5-fold | 0.753 | higher CV = more overfitting |
 | **phase4 B0 label_smooth=0.05** | **0.818** | **+0.029 breakthrough** |
 | phase4 5-fold (est.) | ~0.833 | folds 0-3 done, fold4 running |
-| **Perch MLP 5-fold (frozen embs)** | **0.873** | **+0.055 vs phase4 1-fold; new best** |
-| Perch MLP + Site×Hour prior | 0.790 | **-0.083** — prior kills 159/234 zero-SS classes |
+| **Perch MLP 5-fold (frozen embs)** | **0.873** | **best single model** |
+| Perch MLP + Site×Hour prior | 0.790 | -0.083 — prior kills 159/234 zero-SS classes |
+| Ensemble Perch+EfficientNet 50/50 | 0.854 | -0.019 — EfficientNet drags Perch down |
 
 ## Root Cause of CV→LB Gap (Confirmed)
 The model was overconfident on easy focal clips (high clip CV) but this certainty
@@ -65,7 +66,7 @@ Higher clip CV reliably predicted worse LB throughout all experiments.
 3. [CONFIRMED] Bigger backbone = more overfitting = worse LB (B2 proven)
 4. [CONFIRMED] Perch frozen embeddings + MLP → 0.873 LB (+0.055 over phase4 single fold)
 5. [RULED OUT] Site×Hour prior — kills 159 zero-SS classes, -0.083 LB on Perch MLP
-6. [ACTIVE] Perch+EfficientNet ensemble — two uncorrelated architectures
+6. [RULED OUT] Perch+EfficientNet 50/50 ensemble — EfficientNet (est. ~0.833) too weak; drags Perch (0.873) down to 0.854. Only worth trying weighted if ENF alone confirmed > 0.860.
 7. [PENDING] Zero-clip class handling — 25+ insect/amphibian classes near-blind
 8. [PENDING] Better Perch head — SSM/attention instead of MLP; or fine-tuned ONNX
 

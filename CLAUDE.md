@@ -82,7 +82,8 @@ Always return:
 10. [FUTURE] Better Perch head (attention/SSM), fine-tuned Perch
 
 ## What We've Ruled Out
-- **Site×Hour prior at inference**: -0.083 LB (0.873→0.790). Training soundscapes cover 9 sites, test sites differ. Global fallback zeros 159/234 classes with zero SS observations. Macro AUC weights all 234 classes equally so zeroing 159 is catastrophic. DO NOT USE.
+- **Site×Hour prior at inference**: -0.083 LB (0.873→0.790). Training SS cover 9 sites; test sites differ. Global fallback zeros 159/234 classes. DO NOT USE.
+- **50/50 Perch+EfficientNet ensemble**: -0.019 LB (0.873→0.854). EfficientNet (~0.833 est.) too weak to help; drags Perch down. Only ensemble models within 0.01 of each other.
 - Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
 - Bigger backbone (phase 3 B2): higher clip CV = more overfitting = worse LB
 - Mixup augmentation: hurts CV and LB
