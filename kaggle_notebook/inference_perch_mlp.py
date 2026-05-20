@@ -98,6 +98,11 @@ N_THREADS   = 4
 TARGET_SR   = 32000
 WIN_LEN     = 160000  # 5s × 32kHz
 
+# Multi-window aggregation: mix each window's prediction with the file-level
+# max-pool across all windows. Helps rare/brief species (macro AUC weights
+# all 234 classes equally). 0=pure file max, 1=pure per-window (baseline).
+AGGREGATION_ALPHA = 0.5
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 torch.set_num_threads(N_THREADS)
@@ -228,7 +233,14 @@ for file_idx, filepath in enumerate(test_files):
             file_probs.append(preds)
 
         if file_probs:
-            all_probs.append(np.concatenate(file_probs, axis=0))
+            file_arr = np.concatenate(file_probs, axis=0)  # (N_windows, 234)
+
+            # Multi-window aggregation: mix each window with file-level max-pool
+            if AGGREGATION_ALPHA < 1.0 and len(file_arr) > 1:
+                file_max = file_arr.max(axis=0, keepdims=True)  # (1, 234)
+                file_arr = AGGREGATION_ALPHA * file_arr + (1 - AGGREGATION_ALPHA) * file_max
+
+            all_probs.append(file_arr)
             all_row_ids.extend(row_ids)
 
     except Exception as e:
