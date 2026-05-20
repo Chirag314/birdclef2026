@@ -17,17 +17,17 @@ import sys
 import time
 from pathlib import Path
 
-# Install onnxruntime from bundled wheel (not pre-installed on Kaggle CPU)
-def _install_onnxruntime():
-    wheel_dir = Path("/kaggle/input/birdclef2026-perch")
-    wheels = sorted(wheel_dir.glob("onnxruntime*.whl"))
-    if not wheels:
-        raise RuntimeError("onnxruntime wheel not found in dataset")
-    subprocess.run([sys.executable, "-m", "pip", "install", str(wheels[0]), "--quiet"],
-                   check=True)
-    print(f"Installed {wheels[0].name}")
-
-_install_onnxruntime()
+# onnxruntime is not pre-installed in Kaggle CPU env — install from bundled wheel
+# (avoids any network dependency; wheel is in the attached dataset)
+_wheel_dir = Path("/kaggle/input/birdclef2026-perch")
+_wheels = sorted(_wheel_dir.glob("onnxruntime*.whl"))
+if _wheels:
+    subprocess.run([sys.executable, "-m", "pip", "install", str(_wheels[0]), "--quiet"], check=True)
+    print(f"Installed {_wheels[0].name}")
+else:
+    # Fallback: Kaggle caches common packages offline
+    subprocess.run([sys.executable, "-m", "pip", "install", "onnxruntime", "--quiet"], check=True)
+    print("Installed onnxruntime from pip cache")
 
 import numpy as np
 import pandas as pd
