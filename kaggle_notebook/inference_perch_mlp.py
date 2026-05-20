@@ -74,19 +74,11 @@ print(f"PERCH_DIR: {PERCH_DIR}")
 print(f"DATA_DIR:  {DATA_DIR}")
 print(f"DATA_DIR contents: {[p.name for p in DATA_DIR.iterdir()]}")
 
-TEST_DIR     = DATA_DIR / "test_soundscapes"
-print(f"TEST_DIR: {TEST_DIR}, exists: {TEST_DIR.exists()}")
-if TEST_DIR.exists():
-    all_files = list(TEST_DIR.iterdir())
-    ogg_files = list(TEST_DIR.glob("*.ogg"))
-    print(f"  all files: {len(all_files)}, .ogg: {len(ogg_files)}")
-    print(f"  first 5 items: {[p.name for p in all_files[:5]]}")
-    # Also check with rglob in case nested
-    all_ogg_recursive = list(TEST_DIR.rglob("*.ogg"))
-    print(f"  recursive .ogg: {len(all_ogg_recursive)}")
-SAMPLE_SUB   = DATA_DIR / "sample_submission.csv"
-ONNX_PATH    = PERCH_DIR / "perch_v2.onnx"
-LE_PATH      = PERCH_DIR / "label_encoder.json"
+TEST_DIR          = DATA_DIR / "test_soundscapes"
+SAMPLE_SUB        = DATA_DIR / "sample_submission.csv"
+ONNX_PATH         = PERCH_DIR / "perch_v2.onnx"
+LE_PATH           = PERCH_DIR / "label_encoder.json"
+SITE_HOUR_PRIOR   = PERCH_DIR / "site_hour_prior.npz"
 
 # src/ in dataset may be flat or zip-extracted (double-nested)
 _src_flat   = PERCH_DIR / "src" / "perch_mlp.py"
@@ -121,6 +113,17 @@ logger.info(f"Classes: {n_classes}")
 
 sample_sub = pd.read_csv(SAMPLE_SUB)
 fill_value = 1.0 / n_classes
+
+# ---------------------------------------------------------------------------
+# Site×Hour prior (optional)
+# ---------------------------------------------------------------------------
+site_hour_prior = None
+if SITE_HOUR_PRIOR.exists():
+    from src.postprocess import SiteHourPrior
+    site_hour_prior = SiteHourPrior.load(str(SITE_HOUR_PRIOR))
+    logger.info(f"Site×Hour prior loaded: {len(site_hour_prior.sites)} sites")
+else:
+    logger.info("Site×Hour prior not found — skipping")
 
 # ---------------------------------------------------------------------------
 # Load Perch ONNX session
@@ -261,6 +264,12 @@ if not all_probs:
     raise SystemExit(0)
 
 all_probs = np.concatenate(all_probs, axis=0)
+
+# Apply Site×Hour prior
+if site_hour_prior is not None:
+    all_probs = site_hour_prior.apply(all_probs, all_row_ids)
+    logger.info("Site×Hour prior applied.")
+
 submission = pd.DataFrame(all_probs, columns=class_cols)
 submission.insert(0, "row_id", all_row_ids)
 

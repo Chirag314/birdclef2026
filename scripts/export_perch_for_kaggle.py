@@ -63,13 +63,25 @@ def main():
     else:
         print(f"WARNING: onnxruntime wheel not found at {whl_src}")
 
-    # 5. src/perch_mlp.py — zip it so kaggle datasets version includes it
+    # 5. Site×Hour prior
+    prior_src = REPO_DIR / "artifacts" / "site_hour_prior.npz"
+    if prior_src.exists():
+        shutil.copy2(prior_src, OUT_DIR / "site_hour_prior.npz")
+        print(f"Copied site_hour_prior.npz ({prior_src.stat().st_size} bytes)")
+    else:
+        print(f"WARNING: site_hour_prior.npz not found at {prior_src}")
+
+    # 6. src/ — zip perch_mlp.py + postprocess.py so kaggle datasets version includes them
     import zipfile
     zip_path = OUT_DIR / "src.zip"
-    mlp_src = REPO_DIR / "src" / "perch_mlp.py"
+    src_files = ["perch_mlp.py", "postprocess.py"]
     with zipfile.ZipFile(str(zip_path), "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.write(str(mlp_src), arcname="src/perch_mlp.py")
-    print(f"Created src.zip ({zip_path.stat().st_size} bytes, contains: {[i.filename for i in zipfile.ZipFile(str(zip_path)).infolist()]})")
+        for fname in src_files:
+            src_file = REPO_DIR / "src" / fname
+            if src_file.exists():
+                zf.write(str(src_file), arcname=f"src/{fname}")
+    contents = [i.filename for i in zipfile.ZipFile(str(zip_path)).infolist()]
+    print(f"Created src.zip ({zip_path.stat().st_size} bytes, contains: {contents})")
 
     # 5. Dataset metadata
     meta = {
