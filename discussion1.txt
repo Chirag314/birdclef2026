@@ -1,0 +1,133 @@
+What's the limit without any Perch involved
+Hello everyone, I notice nearly all top-ranked notebooks on the leaderboard（including my own solutions,）rely heavily on Perch in one way or another. Most either extract audio embeddings via Perch or adopt Perch-based knowledge distillation. I think this may has caused severe lack of model diversity among our approaches. In my exps, merging another extra Perch-based model into ensembles barely brings any effective gain — the final LB improvement is only around 0.001 at most, which is basically within random score fluctuation. For this reason, I’ve been trying to train pure CNN branches only using mel-spectrogram input with EfficientNet-B0, without introducing any Perch weights, embeddings or distillation strategies at all. Unfortunately, all my attempts can hardly break 0.88 on public LB. Here are my two main questions:
+
+1.What is the approximate upper bound public LB score we can reach if we stick purely to CNN pipelines with zero Perch involvement?
+2.Under current mainstream ensemble frameworks, can we still obtain valid leaderboard gains by adding well-trained non-Perch models, even if their single-model scores are below 0.9?
+Thanks a lot for all valuable discussions and opinions! 😊
+
+
+React
+9 Comments
+Newest
+ 
+Comment here. Be patient, be friendly, and focus on ideas. We're all here to learn and improve!
+This comment will be made public once posted.
+
+
+Post Comment
+Arunodhayan
+Posted a day ago
+
+· 14th in this Competition
+
+my single model LB is 0.946
+
+
+Reply
+
+React
+yh-nnn
+Posted a day ago
+
+· 113th in this Competition
+
+How did you do it? Unbelievable.
+
+
+Reply
+
+React
+Zejun_
+Posted a day ago
+
+· 10th in this Competition
+
+impressive score
+
+
+Reply
+
+React
+tennogh
+Posted 2 days ago
+
+· 35th in this Competition
+
+If you look at the best LB scores threads you will see people made strong models without any Perch involvement. Even using Perch, different methods can still be complementary, e.g. the public notebooks using Perch embeddings the one using SED with distillation aren't very correlated.
+
+
+Reply
+
+React
+MengYe
+Posted 2 days ago
+
+· 410th in this Competition
+
+you can use asymmetric loss with the public hgnet notebook and some tuning to reach 0.90+ lb, some public post-processing methods can make it reach 0.91+ lb
+
+
+Reply
+
+React
+BNBU Anpeng Yuan
+Posted a day ago
+
+· 329th in this Competition
+
+Hi Meng! In the public HGNet notebook, after changing the output chunk to 10 seconds, what corresponding adjustments should be made to the inference code? Since this is not an SED model and cannot produce frame‑level outputs, if the input becomes 10 seconds, the output also seems to become 10 seconds.
+
+
+Reply
+
+React
+To be happy
+Posted a day ago
+
+· 1723rd in this Competition
+
+ Are you referring to this asymmetric loss? Why did my LB score drop by 0.03 after implementing the modification based on the public hgnet notebook?
+
+
+Reply
+
+React
+Dhruv Pai Dukle
+Posted 30 minutes ago
+
+· 1069th in this Competition
+
+Mine To honestly
+
+
+Reply
+
+React
+Antoine Masq
+Posted 2 days ago
+
+· 675th in this Competition
+
+I'm only using custom CNN pipelines (EfficientNetv2_b0 only) without using Perch, and now my best single model gets a 0.936 LB score and I can reach 0.948 by ensembling different runs
+
+
+Reply
+
+React
+To be happy
+Posted 2 days ago
+
+· 1723rd in this Competition
+
+Did you initialize your EfficientNetv2_b0 with pretrained weights?
+
+
+Reply
+
+React
+Antoine Masq
+Posted 2 days ago
+
+· 675th in this Competition
+
+Yes and I also pretrained it on Xeno-Canto data
