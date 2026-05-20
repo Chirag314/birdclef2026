@@ -55,11 +55,12 @@ def main():
     shutil.copy2(LE_SRC, OUT_DIR / "label_encoder.json")
     print(f"Copied label_encoder.json")
 
-    # 4. src/perch_mlp.py (inference needs this)
-    src_dir = OUT_DIR / "src"
-    src_dir.mkdir(exist_ok=True)
-    shutil.copy2(REPO_DIR / "src" / "perch_mlp.py", src_dir / "perch_mlp.py")
-    print(f"Copied src/perch_mlp.py")
+    # 4. src/perch_mlp.py — zip it so kaggle datasets version includes it
+    import zipfile, tempfile
+    zip_path = OUT_DIR / "src.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(REPO_DIR / "src" / "perch_mlp.py", arcname="src/perch_mlp.py")
+    print(f"Created src.zip ({zip_path.stat().st_size//1024}KB)")
 
     # 5. Dataset metadata
     meta = {
