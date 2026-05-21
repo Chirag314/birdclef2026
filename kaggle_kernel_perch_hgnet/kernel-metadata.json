@@ -1,0 +1,17 @@
+{
+  "id": "cid007/birdclef2026-perch-hgnet-ensemble",
+  "title": "birdclef2026-perch-hgnet-ensemble",
+  "code_file": "inference_perch_hgnet_ensemble.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": [
+    "cid007/birdclef2026-perch",
+    "nischaydnk/birdclef-tawara-hgnet-lb-4fold"
+  ],
+  "competition_sources": ["birdclef-2026"],
+  "kernel_sources": []
+}
