@@ -57,7 +57,7 @@ OUTPUT = Path("/kaggle/working/submission.csv")
 
 print(f"HGNET_DIR: {HGNET_DIR}")
 print(f"DATA_DIR:  {DATA_DIR}")
-print(f"HGNET contents: {[p.name for p in HGNET_DIR.iterdir() if '256x256' in p.name or p.suffix=='.txt']}")
+print(f"HGNET contents: {[p.name for p in HGNET_DIR.iterdir() if '256x512' in p.name or p.suffix=='.txt']}")
 
 TEST_DIR   = DATA_DIR / "test_soundscapes"
 SAMPLE_SUB = DATA_DIR / "sample_submission.csv"
@@ -66,8 +66,12 @@ TIME_LIMIT = 5100
 N_THREADS  = 4
 SR         = 32000
 WIN_SEC    = 5
-WIN_LEN    = SR * WIN_SEC          # 160000 samples
-BATCH_SIZE = 12                    # fixed by ONNX model
+WIN_LEN    = SR * WIN_SEC          # 160000 samples — 5s target window
+# Tawara uses 10s context: 2.5s before + 5s + 2.5s after each window
+SHIFT_SEC  = 2.5
+SHIFT_LEN  = int(SR * SHIFT_SEC)   # 80000 samples per side
+CTX_LEN    = WIN_LEN + 2 * SHIFT_LEN  # 320000 samples = 10s
+BATCH_SIZE = 12                    # fixed by ONNX model (256x512)
 N_FOLDS    = 4
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s", datefmt="%H:%M:%S")
@@ -87,15 +91,15 @@ _db_transform  = torchaudio.transforms.AmplitudeToDB(stype="power", top_db=80)
 
 def audio_to_lms(wave_batch: np.ndarray) -> np.ndarray:
     """
-    wave_batch: (B, WIN_LEN) float32
-    Returns:    (B, 1, 256, 256) float32, min-max normalised per sample
+    wave_batch: (B, CTX_LEN) float32 — 10s context window (2.5s+5s+2.5s)
+    Returns:    (B, 1, 256, 512) float32, min-max normalised per sample
     """
-    x = torch.from_numpy(wave_batch)          # (B, samples)
+    x = torch.from_numpy(wave_batch)          # (B, 320000)
     mel = _mel_transform(x)                   # (B, 256, T)
     lms = _db_transform(mel)                  # (B, 256, T)
     lms = lms.unsqueeze(1)                    # (B, 1, 256, T)
-    # Resize time axis to 256
-    lms = F.interpolate(lms, size=(256, 256), mode="bilinear", align_corners=False)
+    # Resize to (256, 512) — 10s at this resolution
+    lms = F.interpolate(lms, size=(256, 512), mode="bilinear", align_corners=False)
     # Min-max normalise per sample
     B = lms.shape[0]
     flat = lms.view(B, -1)
@@ -133,7 +137,7 @@ sess_opts.inter_op_num_threads = N_THREADS
 
 sessions = []
 for fold in range(N_FOLDS):
-    onnx_path = HGNET_DIR / f"best_model_fold{fold}_256x256.onnx"
+    onnx_path = HGNET_DIR / f"best_model_fold{fold}_256x512.onnx"
     if not onnx_path.exists():
         logger.warning(f"Missing fold {fold} ONNX: {onnx_path}")
         continue
@@ -186,29 +190,35 @@ for file_idx, filepath in enumerate(test_files):
         break
 
     try:
-        info    = sf.info(str(filepath))
-        dur     = info.duration
-        starts  = [i * WIN_SEC for i in range(int(dur // WIN_SEC))]
+        info      = sf.info(str(filepath))
+        dur       = info.duration
+        native_sr = info.samplerate
+        starts    = [i * WIN_SEC for i in range(int(dur // WIN_SEC))]
         if not starts:
             continue
         row_ids = [f"{filepath.stem}_{int(s + WIN_SEC)}" for s in starts]
-        native_sr = info.samplerate
 
-        # Load all windows
+        # Load full file once with SHIFT padding on each side (Tawara 10s trick)
+        total_frames = int(dur * native_sr)
+        raw, sr_read = sf.read(str(filepath), dtype="float32", always_2d=False)
+        if raw.ndim > 1:
+            raw = raw.mean(axis=1)
+        if sr_read != SR:
+            import resampy
+            raw = resampy.resample(raw, sr_read, SR)
+        # Pad SHIFT_LEN on each side for context
+        raw_padded = np.pad(raw, (SHIFT_LEN, SHIFT_LEN))
+
+        # Extract 10s context window for each 5s segment
         windows = []
         for s in starts:
-            start_frame = int(s * native_sr)
-            frames_need = int(WIN_SEC * native_sr) + 1
-            data, sr_read = sf.read(str(filepath), dtype="float32", always_2d=False,
-                                     start=start_frame, frames=frames_need)
-            if data.ndim > 1:
-                data = data.mean(axis=1)
-            if sr_read != SR:
-                import resampy
-                data = resampy.resample(data, sr_read, SR)
-            if len(data) < WIN_LEN:
-                data = np.pad(data, (0, WIN_LEN - len(data)))
-            windows.append(data[:WIN_LEN].astype(np.float32))
+            seg_start = int(s * SR)           # start of 5s segment in original
+            ctx_start = seg_start             # with padding, this is seg_start in padded
+            ctx_end   = ctx_start + CTX_LEN   # CTX_LEN = SHIFT + WIN + SHIFT = 10s
+            ctx = raw_padded[ctx_start:ctx_end]
+            if len(ctx) < CTX_LEN:
+                ctx = np.pad(ctx, (0, CTX_LEN - len(ctx)))
+            windows.append(ctx[:CTX_LEN].astype(np.float32))
 
         # Batch inference
         file_probs = []
