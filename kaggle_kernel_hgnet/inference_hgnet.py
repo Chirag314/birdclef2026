@@ -3,7 +3,7 @@ BirdCLEF 2026 — HGNet Inference
 Tawara HGNetV2-B0 4-fold ensemble using ONNX runtime.
 
 Datasets required:
-  nischaydnk/birdclef-tawara-hgnet-lb-4fold  → HGNet ONNX models
+  birdclef-tawara-hgnet-lb-4fold  → HGNet ONNX models
   cid007/birdclef2026-perch                  → onnxruntime wheel
   birdclef-2026                              → competition data
 
@@ -47,7 +47,7 @@ def _find_dir(candidates):
 
 HGNET_DIR = _find_dir([
     "/kaggle/input/birdclef-tawara-hgnet-lb-4fold",
-    "/kaggle/input/datasets/nischaydnk/birdclef-tawara-hgnet-lb-4fold",
+    "/kaggle/input/datasets/birdclef-tawara-hgnet-lb-4fold",
 ])
 DATA_DIR = _find_dir([
     "/kaggle/input/birdclef-2026",

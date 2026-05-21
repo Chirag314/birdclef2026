@@ -9,9 +9,11 @@
   "enable_tpu": false,
   "enable_internet": false,
   "dataset_sources": [
-    "cid007/birdclef2026-perch",
-    "tuckerarrants/bc2026-distilled-sed-public"
+    "birdclef2026-perch",
+    "bc2026-distilled-sed-public"
   ],
-  "competition_sources": ["birdclef-2026"],
+  "competition_sources": [
+    "birdclef-2026"
+  ],
   "kernel_sources": []
 }

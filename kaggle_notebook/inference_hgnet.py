@@ -1,9 +1,9 @@
 """
 BirdCLEF 2026 — HGNet Inference
-Tawara HGNetV2-B0 4-fold ensemble using ONNX runtime.
+HGNetV2-B0 4-fold ensemble using ONNX runtime.
 
 Datasets required:
-  nischaydnk/birdclef-tawara-hgnet-lb-4fold  → HGNet ONNX models
+  birdclef-tawara-hgnet-lb-4fold  → HGNet ONNX models
   cid007/birdclef2026-perch                  → onnxruntime wheel
   birdclef-2026                              → competition data
 
@@ -47,7 +47,7 @@ def _find_dir(candidates):
 
 HGNET_DIR = _find_dir([
     "/kaggle/input/birdclef-tawara-hgnet-lb-4fold",
-    "/kaggle/input/datasets/nischaydnk/birdclef-tawara-hgnet-lb-4fold",
+    "/kaggle/input/datasets/birdclef-tawara-hgnet-lb-4fold",
 ])
 DATA_DIR = _find_dir([
     "/kaggle/input/birdclef-2026",
@@ -67,7 +67,7 @@ N_THREADS  = 4
 SR         = 32000
 WIN_SEC    = 5
 WIN_LEN    = SR * WIN_SEC          # 160000 samples — 5s target window
-# Tawara uses 10s context: 2.5s before + 5s + 2.5s after each window
+# Uses 10s context: 2.5s before + 5s + 2.5s after each window
 SHIFT_SEC  = 2.5
 SHIFT_LEN  = int(SR * SHIFT_SEC)   # 80000 samples per side
 CTX_LEN    = WIN_LEN + 2 * SHIFT_LEN  # 320000 samples = 10s
@@ -78,7 +78,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s", date
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Spectrogram transform (exact Tawara params)
+# Spectrogram transform (published HGNet params)
 # ---------------------------------------------------------------------------
 _MEL_PARAMS = dict(
     sample_rate=32000, n_fft=2048, win_length=626, hop_length=313,
@@ -198,7 +198,7 @@ for file_idx, filepath in enumerate(test_files):
             continue
         row_ids = [f"{filepath.stem}_{int(s + WIN_SEC)}" for s in starts]
 
-        # Load full file once with SHIFT padding on each side (Tawara 10s trick)
+        # Load full file once with SHIFT padding on each side (10s context trick)
         total_frames = int(dur * native_sr)
         raw, sr_read = sf.read(str(filepath), dtype="float32", always_2d=False)
         if raw.ndim > 1:

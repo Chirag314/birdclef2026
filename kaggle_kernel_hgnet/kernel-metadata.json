@@ -9,9 +9,11 @@
   "enable_tpu": false,
   "enable_internet": false,
   "dataset_sources": [
-    "nischaydnk/birdclef-tawara-hgnet-lb-4fold",
-    "cid007/birdclef2026-perch"
+    "birdclef-tawara-hgnet-lb-4fold",
+    "birdclef2026-perch"
   ],
-  "competition_sources": ["birdclef-2026"],
+  "competition_sources": [
+    "birdclef-2026"
+  ],
   "kernel_sources": []
 }

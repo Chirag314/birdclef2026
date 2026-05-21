@@ -7,7 +7,7 @@ Combines:
 
 Datasets required:
   cid007/birdclef2026-perch              → Perch ONNX + MLP weights + ort wheel
-  tuckerarrants/bc2026-distilled-sed-public → SED 5-fold ONNX weights
+  bc2026-distilled-sed-public → SED 5-fold ONNX weights
   birdclef-2026                          → competition data
 
 Runtime: CPU, Internet OFF
@@ -50,7 +50,7 @@ def _find_dir(candidates):
 PERCH_DIR = _find_dir(["/kaggle/input/birdclef2026-perch",
                         "/kaggle/input/datasets/cid007/birdclef2026-perch"])
 SED_DIR   = _find_dir(["/kaggle/input/bc2026-distilled-sed-public",
-                        "/kaggle/input/datasets/tuckerarrants/bc2026-distilled-sed-public"])
+                        "/kaggle/input/datasets/bc2026-distilled-sed-public"])
 DATA_DIR  = _find_dir(["/kaggle/input/birdclef-2026",
                         "/kaggle/input/competitions/birdclef-2026"])
 OUTPUT    = Path("/kaggle/working/submission.csv")
