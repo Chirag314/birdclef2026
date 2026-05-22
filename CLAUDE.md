@@ -36,9 +36,10 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 2. [DONE] ProtoSSM pipeline → 0.944 LB
 3. [DONE] ProtoSSM v2 (power/gate tuning) → 0.944 LB (no gain — ceiling hit)
 4. [DONE] EoS pipeline (correction_weight=0.10) → **0.949 LB** ← current best
-5. [RUNNING] EoS 80% + ProtoSSM 20% blend → target 0.950–0.952 (kaggle_kernel_blend_v2)
-6. [NEXT] Try 3-model blend or different EoS variant if blend fails
-7. Target: 0.950+ (top 200 gold medal)
+5. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
+6. [NEXT] Find public kernel ≥0.947 with different architecture for blending
+7. [NEXT] OR tune EoS directly (lambda_prior, correction_weight single-scalar probes)
+8. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
 - Data/validation fixes before fancy models
@@ -76,14 +77,16 @@ Always return:
 3. [DONE] ProtoSSM pipeline — LB 0.944
 4. [DONE] ProtoSSM v2 (adaptive weights, power=0.5) — LB 0.944 (no gain)
 5. [DONE] EoS pipeline (ONNX Perch, correction_weight=0.10) — LB **0.949**
-6. [RUNNING] EoS 80% + ProtoSSM 20% blend — kaggle_kernel_blend_v2, target 0.950+
-7. [NEXT] If blend fails: try different blend weights or 3rd model
-8. [NEXT] Zero-clip class strategy for 28 insect/amphibian ghost species
+6. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
+7. [NEXT] Find public kernel ≥0.947 with different architecture for blending
+8. [NEXT] OR tune EoS directly (lambda_prior, correction_weight single-scalar probes)
+9. [NEXT] Zero-clip class strategy for 28 insect/amphibian ghost species
 9. [FUTURE] Fine-tuned Perch head with SS-aware training
 
 ## What We've Ruled Out
 - **Site×Hour prior at inference**: -0.083 LB (0.873→0.790). Training SS cover 9 sites; test sites differ. Global fallback zeros 159/234 classes. DO NOT USE.
-- **50/50 Perch+EfficientNet ensemble**: -0.019 LB (0.873→0.854). EfficientNet (~0.833 est.) too weak to help; drags Perch down. Only ensemble models within 0.01 of each other.
+- **50/50 Perch+EfficientNet ensemble**: -0.019 LB (0.873→0.854). EfficientNet (~0.833 est.) too weak to help; drags Perch down.
+- **EoS 80% + ProtoSSM 20% blend**: -0.001 LB (0.949→0.948). 0.005 gap too large — ProtoSSM adds noise. Rule: only blend models within ~0.002–0.003 of each other.
 - **ProtoSSM parameter tuning** (power, gate, adaptive weights): confirmed 0.944 ceiling — no path to gain.
 - Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
 - Bigger backbone (phase 3 B2): higher clip CV = more overfitting = worse LB

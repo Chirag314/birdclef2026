@@ -23,7 +23,7 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Phase 5 — Perch MLP (5-fold) | Done | OOF 0.977, LB=**0.873** (+0.040) |
 | Phase 5 — ProtoSSM pipeline | Done | LB=**0.944** (+0.071) |
 | Phase 5 — EoS pipeline | Done | LB=**0.949** ← current best |
-| Phase 5 — EoS+ProtoSSM blend | **Running** | `kaggle_kernel_blend_v2`, target 0.950+ |
+| Phase 5 — EoS+ProtoSSM blend | Done | 0.948 — hurt -0.001, ruled out |
 
 ---
 
@@ -41,7 +41,7 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | ProtoSSM | Perch v2 + SSM | 5 | — | 0.944 |
 | ProtoSSM v2 | Perch v2 + SSM | 5 | — | 0.944 (no gain) |
 | EoS pipeline | Perch v2 + SSM | 5 | — | **0.949** ← current best |
-| EoS 80% + ProtoSSM 20% | blend | — | — | **pending** (target 0.950+) |
+| EoS 80% + ProtoSSM 20% | blend | — | — | 0.948 ← hurt -0.001, ruled out |
 
 ---
 
@@ -165,5 +165,5 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 5. ~~Phase 5: Perch MLP~~ Done — LB 0.873
 6. ~~Phase 5: ProtoSSM~~ Done — LB 0.944
 7. ~~Phase 5: EoS pipeline~~ Done — LB **0.949** ← current best
-8. **EoS 80% + ProtoSSM 20% blend** — running (`kaggle_kernel_blend_v2`), target 0.950+
-9. **Next if blend fails**: different weights, 3rd model, or zero-clip ghost species strategy
+8. ~~EoS 80% + ProtoSSM 20% blend~~ Done — 0.948 (-0.001, ruled out; gap too large)
+9. **Next**: find public kernel ≥0.947 with different architecture, or tune EoS directly
