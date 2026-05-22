@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 ## BirdCLEF 2026 — Current Phase
-Phase 4 (label smoothing, 5-fold) is locking in ~0.833 baseline. Phase 5 begins now.
-Current goal: close the remaining CV→LB gap via domain alignment and inference calibration.
+Phase 5 (inference stacking + ensemble). Current best: **0.949 LB** (EoS ProtoSSM pipeline).
+Current goal: push past 0.949 via multi-model blending and architectural diversity.
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
@@ -31,13 +31,14 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 - Perch v2 embeddings: 1536-dim, trained on deployment-style audio — bridges domain gap
 - Kaggle inference: CPU-only, 90-minute limit — EfficientNet-B0 fits comfortably
 
-## Current Priorities (15-day medal sprint)
-1. [DONE] Perch MLP 5-fold → 0.873 LB (new best, +0.055 over phase4)
-2. Phase4 5-fold EfficientNet finishing (~0.833) — submit for LB confirmation
-3. Ensemble Perch MLP + EfficientNet phase4 → expected +0.01–0.02
-4. Site×Hour prior on Perch MLP inference → free gain, already built
-5. Zero-clip class audit — 25+ species near-blind, fix before further tuning
-6. Target: 0.949 tier (top 300 gold medal) — gap is 0.076
+## Current Priorities (medal sprint)
+1. [DONE] Perch MLP 5-fold → 0.873 LB
+2. [DONE] ProtoSSM pipeline → 0.944 LB
+3. [DONE] ProtoSSM v2 (power/gate tuning) → 0.944 LB (no gain — ceiling hit)
+4. [DONE] EoS pipeline (correction_weight=0.10) → **0.949 LB** ← current best
+5. [RUNNING] EoS 80% + ProtoSSM 20% blend → target 0.950–0.952 (kaggle_kernel_blend_v2)
+6. [NEXT] Try 3-model blend or different EoS variant if blend fails
+7. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
 - Data/validation fixes before fancy models
@@ -70,25 +71,24 @@ Always return:
 - Prefer targeted prompts over broad planning prompts
 
 ## Current High-ROI Experiment Queue
-1. [DONE] Phase 4 fold0: label smoothing — LB 0.818 (+0.029)
-2. [RUNNING] Phase 4 folds 1-4 — fold4 still training
-3. [DONE] Site×Hour prior — src/postprocess.py built
-4. [DONE] Perch v2 embeddings extracted — (35549, 1536) clips + (1478, 1536) soundscapes
-5. [DONE] Perch MLP 5-fold trained — OOF 0.977, **LB 0.873** (new best)
-6. [DONE] cid007/birdclef2026-perch dataset uploaded — self-contained, no 3rd-party deps
-7. [NEXT] Ensemble Perch MLP + EfficientNet phase4 in inference notebook
-8. [NEXT] Add Site×Hour prior to Perch MLP inference (already in src/postprocess.py)
-9. [NEXT] Zero-clip class audit and fix
-10. [FUTURE] Better Perch head (attention/SSM), fine-tuned Perch
+1. [DONE] Phase 4 5-fold label smoothing — LB ~0.833
+2. [DONE] Perch MLP 5-fold — OOF 0.977, LB 0.873
+3. [DONE] ProtoSSM pipeline — LB 0.944
+4. [DONE] ProtoSSM v2 (adaptive weights, power=0.5) — LB 0.944 (no gain)
+5. [DONE] EoS pipeline (ONNX Perch, correction_weight=0.10) — LB **0.949**
+6. [RUNNING] EoS 80% + ProtoSSM 20% blend — kaggle_kernel_blend_v2, target 0.950+
+7. [NEXT] If blend fails: try different blend weights or 3rd model
+8. [NEXT] Zero-clip class strategy for 28 insect/amphibian ghost species
+9. [FUTURE] Fine-tuned Perch head with SS-aware training
 
 ## What We've Ruled Out
 - **Site×Hour prior at inference**: -0.083 LB (0.873→0.790). Training SS cover 9 sites; test sites differ. Global fallback zeros 159/234 classes. DO NOT USE.
 - **50/50 Perch+EfficientNet ensemble**: -0.019 LB (0.873→0.854). EfficientNet (~0.833 est.) too weak to help; drags Perch down. Only ensemble models within 0.01 of each other.
+- **ProtoSSM parameter tuning** (power, gate, adaptive weights): confirmed 0.944 ceiling — no path to gain.
 - Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
 - Bigger backbone (phase 3 B2): higher clip CV = more overfitting = worse LB
 - Mixup augmentation: hurts CV and LB
 - SpecAugment: deprioritised — overconfidence was the real bottleneck, now fixed by label smoothing
-- Rank-aware power scaling (p=0.6): unverified — our problem was OVERconfidence, squashing toward 1 would likely hurt
 
 ## Anti-Patterns
 - Don’t recommend generic BirdCLEF tricks without tying them to this repo

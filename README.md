@@ -19,8 +19,11 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Phase 1 — Augmentation isolation | Done | bg noise best (CV 0.9412, LB 0.789) |
 | Phase 2 — Soundscape-aware training | Done | No improvement — see findings |
 | Phase 3 — EfficientNet-B2 | Done | B2 5-fold LB=0.753 — **worse** than B0 |
-| Phase 4 — Label smoothing (B0) | **Running folds 1-4** | fold0 LB=**0.818** ← new best! |
-| Kaggle inference notebook | Done | `kaggle_notebook/` |
+| Phase 4 — Label smoothing (B0, 5-fold) | Done | LB=**0.833** |
+| Phase 5 — Perch MLP (5-fold) | Done | OOF 0.977, LB=**0.873** (+0.040) |
+| Phase 5 — ProtoSSM pipeline | Done | LB=**0.944** (+0.071) |
+| Phase 5 — EoS pipeline | Done | LB=**0.949** ← current best |
+| Phase 5 — EoS+ProtoSSM blend | **Running** | `kaggle_kernel_blend_v2`, target 0.950+ |
 
 ---
 
@@ -29,13 +32,16 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Experiment | Backbone | Folds | CV (clip) | Public LB |
 |---|---|---|---|---|
 | baseline_v1 | B0 | 5 | 0.9248 | — |
-| phase1a_bg_only | B0 | 5 | 0.9412 | **0.789** ← best |
+| phase1a_bg_only | B0 | 5 | 0.9412 | 0.789 |
 | phase2_ss_aware | B0 | 1 | 0.8220 (SS holdout) | 0.756 |
 | phase2b_ss | B0 | 1 | 0.7883 (SS holdout) | 0.774 |
-| phase3_b2 | **B2** | 1 | 0.9604 | 0.774 |
-| phase3_b2 | **B2** | 5 | 0.9590 avg | 0.753 ← worse than B0! |
-| phase4_ls | B0 | 1 | 0.9289 | **0.818** ← NEW BEST (+0.029) |
-| phase4_ls | B0 | 5 | — | ~0.833 est. (folds 1-4 running) |
+| phase3_b2 | **B2** | 5 | 0.9590 avg | 0.753 |
+| phase4_ls | B0 | 5 | 0.929 avg | 0.833 |
+| Perch MLP | Perch v2 + MLP | 5 | OOF 0.977 | 0.873 |
+| ProtoSSM | Perch v2 + SSM | 5 | — | 0.944 |
+| ProtoSSM v2 | Perch v2 + SSM | 5 | — | 0.944 (no gain) |
+| EoS pipeline | Perch v2 + SSM | 5 | — | **0.949** ← current best |
+| EoS 80% + ProtoSSM 20% | blend | — | — | **pending** (target 0.950+) |
 
 ---
 
@@ -70,9 +76,17 @@ Higher clip CV = more overconfidence on clips = worse LB.
 **Label smoothing (0.05) fixes this directly:**
 - Clip CV drops: 0.940 → 0.929 (less memorization)
 - LB jumps: 0.774 → **0.818** (+0.029 from 1 fold alone)
-- 5-fold expected: ~0.833
+- 5-fold: ~0.833
 
-**This is the single biggest LB improvement found.**
+### Perch v2 embeddings — massive domain gap fix (Phase 5)
+Perch v2 (1536-dim, trained on deployment-style audio) bridges the focal-clip → soundscape gap:
+- Perch MLP 5-fold: LB **0.873** (+0.040 over phase4)
+- ProtoSSM head on Perch: LB **0.944** (+0.071)
+- EoS variant (correction_weight=0.10): LB **0.949** ← current best
+- ProtoSSM parameter tuning (power, gates): confirmed ceiling at 0.944, no path forward
+- EoS+ProtoSSM blend (80/20): pending — expected 0.950+
+
+**LB progression: 0.789 → 0.833 → 0.873 → 0.944 → 0.949**
 
 ---
 
@@ -146,7 +160,10 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 1. ~~Phase 1: augmentation~~ Done — bg noise best (LB 0.789)
 2. ~~Phase 2: soundscape oversampling~~ Done — no improvement
-3. ~~Phase 3: B2 backbone~~ Done — worse (LB 0.753), rules out capacity
-4. ~~Phase 4 fold0: label smoothing~~ Done — LB **0.818** (+0.029, new best!)
-5. **Phase 4 folds 1-4** — running now, est. 5-fold LB ~0.833
-6. Next: SpecAugment on top of label smoothing, then B2+smoothing
+3. ~~Phase 3: B2 backbone~~ Done — worse (LB 0.753)
+4. ~~Phase 4: label smoothing 5-fold~~ Done — LB 0.833
+5. ~~Phase 5: Perch MLP~~ Done — LB 0.873
+6. ~~Phase 5: ProtoSSM~~ Done — LB 0.944
+7. ~~Phase 5: EoS pipeline~~ Done — LB **0.949** ← current best
+8. **EoS 80% + ProtoSSM 20% blend** — running (`kaggle_kernel_blend_v2`), target 0.950+
+9. **Next if blend fails**: different weights, 3rd model, or zero-clip ghost species strategy
