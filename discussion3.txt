@@ -1,0 +1,268 @@
+Training Recipe Help (BCE vs CE, soft vs hard labels, ...)
+I recently seem to be going in circles trying to tweak my training recipe, and I keep running into the weekly gpu limit so my ability to run exhaustive ablations is limited, so I was hoping to hear some high-level what works/doesn't work with people's training recipes. For reference, I'm trying to train a simple 5-fold sed model (using the architecture from last year's winning solution: https://www.kaggle.com/code/nikitababich/birdclef2025-1st-place-inference/notebook). I currently can't seem to get an single fold from my 5-folds to score higher than LB 0.9 (with single fold val-auc around 0.93-0.95), but I see people getting single models from their fold up as high as 0.93 without using pseudo labels, so I'm wondering if the training recipe is how I can close that gap or if it's more about model architecture or something else.
+
+CE vs BCE?
+I see a lot of people in discussions noting that they use CE instead of BCE loss, but any attempt I've made to switch from BCE (with logits loss) to CE degrades my model performance (single fold LB 0.85-0.88 down to 0.78-0.79). What big levers need modifying when trying to switch between these different losses? (Is it also possible that in discussions when people mention using ce or cross-entropy loss, do they really mean bce?)
+
+Soft vs Hard secondary labels?
+Like the title I've tried using both hard labels (set all secondary labels to 1.0) and soft labels (0.4ish), and I was curious what other people are finding works best since we have a small amount of labelled soundscapes to add to the training mix (multi-hot labels). Also, how do you decide whether to use hard or soft secondary labels based on your loss choice (CE vs BCE)?
+
+Background Noise?
+I'm trying to incorporate background noise into my training augmentations (specifically on the focal train_audio) from this dataset: https://www.kaggle.com/datasets/honglihang/background-noise. But I've listened to some of the audio there and definitely hear some calls in the audio, so has anyone found using background noise to be helpful in improving LB (or at least not causing it to drop)?
+
+
+“How to implement Perch knowledge distillation for BirdCLEF 2026?”
+I’m currently at 0.908 using Perch ONNX + LogReg probes + SED ensemble. I want to implement Perch distillation like Tucker. My plan: 1. Run Perch probe pipeline on all 28,000 focal clips → save soft probabilities 2. Use those as teacher targets for HGNet training Questions: • Is this the correct approach? • How do you handle the mismatch between 5s focal clips and 5s soundscape windows? • What distillation loss worked best for you? Any advice appreciated! 🙏
+
+
+React
+1 Comment
+Newest
+ 
+Comment here. Be patient, be friendly, and focus on ideas. We're all here to learn and improve!
+This comment will be made public once posted.
+
+
+Post Comment
+Tucker Arrants
+Posted 11 days ago
+
+· 756th in this Competition
+
+What you are describing would be logit distillation between teacher and student on the focal recordings. This was successfully done last year by @myso1987 et al. and is described here.
+
+As I understand their approach, the logic was that we know the focal recordings are incomplete and many of them contain other species in the background that the annotators missed/did not care to label, so you use a teacher model to "complete" or "enrich" the labels to provide additional supervision. You also get the soft-label 'dark knowledge' signal from Hinton's original distillation paper — the relative magnitudes of non-target class probabilities encode inter-class structure that one-hot labels miss.
+
+I tried this as a separate experiment for this year and could not get it to work.
+
+What I did, as originally shared by @hengk, is knowledge distillation of the embeddings, which is different. In particular, you are asking the student to produce features that, after GAP pooling and a learned linear projection, match Perch v2's pooled embeddings. I am not sharing any sort of logits/predictions of Perch with the student.
+
+For the loss itself, plain MSE between the projected student embedding and the Perch embedding worked best — no temperature, no cosine, nothing fancy. You can try things like RKD but I was happy with the results I got from MSE.
+
+So the mismatch you are worried about here does not exist: you pass a waveform to Perch and the student (any backbone you want, any mel config you want) and say "your GAP'd-and-projected features should match what Perch sees on this same waveform." Both see 5s; the targets are well-defined regardless of whether the audio is focal, soundscape, or a mix of the two.
+Label Smoothing
+I'm currently using label smoothing (about 0.02), and I haven't made it a priority to run an ablation on just this lever yet, so to save me the heartache of using gpu-hours, has anyone already ran an ablation on this to see if this has a meaningful impact on training your models?
+
+Validation Set
+I'm currently only using only oof labelled soundscapes in my validation set for my 5-folds (the thinking being that it much more closely resembles the test domain). However, across 5-folds that usually means that there is only a small subset of species coverage in each of my oof validation sets (fold 0 has 63 / 234 species present in the validation set). Has anyone found that including oof focal audio from train_audio produces more LB correlated oof-auc scores during training?
+
+EMA Checkpoints
+I'm currently using ema checkpointing in my runs, and haven't yet tested just saving single best epoch checkpoints. Has anyone tried running tests to see if this is worth it? (I'm worried that using ema + label smoothing might be regularizing a bit too heavily).
+
+Freezing the Backbone
+I'm currently not freezing the backbone when training (as I think most people are doing the same), but I'm curious if anyone has any results from only training the attention head and leaving the backbone weights as-is. Has anyone tried a multi-stage training approach where the backbone is frozen at first and the unfreezes in a second stage-training?
+
+I know I'm asking a lot of questions here, and I don't expect anyone to share their "secret recipe", but just some general direction to help me decide which ablations are worth testing given my (and likely other's) limited gpu resources would be super helpful. Also, if you have any other interesting thoughts on training recipes I didn't mention above please feel free to share and help out!
+
+
+React
+2 Comments
+Newest
+ 
+Comment here. Be patient, be friendly, and focus on ideas. We're all here to learn and improve!
+This comment will be made public once posted.
+
+
+Post Comment
+Tucker Arrants
+Posted 8 days ago
+
+· 756th in this Competition
+
+1) BCE vs CE, I get quicker convergence with CE but better CV and LB score with BCE.
+
+2) Soft vs. hard secondary labels, I use hard but have seen people use 0.5 to reflect the secondary labels lower "quality" - I cannot imagine it makes much difference.
+
+3) As you noticed, "no call" is more accurately "no bird call" - many of those clips have insect and amphibian sounds in them. Whether this matters or not in training is an empirical question. Theoretically, you could be punishing the model for correctly predicting something in the background of a "no call" clip, but theory and application are not always aligned. I skipped no call augmentation.
+
+4) Label smoothing does not make much of a difference in my training, I have it off.
+
+5) Validation set being thin, not much you can do but yes, it is more reflective of test set than focal recordings. Previous years resorted to submitting to the leaderboard as their primary validation strategy. This year, you have small validation set, but its too thin to trust - I still submit to LB for feedback. A trick you can use: find Neotropical soundscapes online that have decent species overlap with this competition and use them for validation. I have found many such datasets - these are great to validate against as they tell you how well your model generalizes to similar biomes, but different sites.
+
+6) EMA - I do not use it, but that is probably worth a quick submission to the leaderboard: submit with and without across 2-3 seeds and use that for feedback.
+
+Hope some of that helps.
+
+
+Reply
+
+React
+Nick Pellegrin
+Topic Author
+Posted 8 days ago
+
+· 829th in this Competition
+
+That is very helpful, and I think for the most part I suspected some of these answers. I keep getting hung up reading through this thread: https://www.kaggle.com/competitions/birdclef-2026/discussion/683791#3456239 and seeing all the really high-scoring single models that I think are using CE instead of BCE, but I'm not sure if switching to a well tuned CE training recipe is the "secret sauce" by itself.
+
+
+Reply
+
+React
+To be happy
+Posted 8 days ago
+
+· 1738th in this Competition
+
+Isn't CE the loss function for binary classification tasks? BCE is the loss function for multi-class classification tasks. I also saw many high-scoring participants in that thread saying they used CE, but I can't even fathom how to use CE in this competition. I would be incredibly grateful if you could answer my question
+
+
+Reply
+
+React
+Tucker Arrants
+Posted 8 days ago
+
+· 756th in this Competition
+
+CE is the typical loss function for multi-class problems with one-hot (single-label) targets where probabilities sum to 1, not multi-label problems like this one where multiple species can be present in a clip.
+
+However, since the competition metric is AUC, calibration doesn't matter, only rank does. CE with unnormalized soft targets stops being a probability loss and becomes a ranking loss, which happens to align with what AUC rewards.
+
+It also handles class imbalance better than BCE: rare classes only get meaningful gradient when present, instead of drowning in "be negative everywhere" signal from the 99% of rows where they're absent.
+
+I do not know who first tried/shared this, but it is a clever loss trick for this particular problem.
+
+
+Reply
+
+React
+Nick Pellegrin
+Topic Author
+Posted 8 days ago
+
+· 829th in this Competition
+
+This was my understanding too (even though I have yet to get a better result from CE), and I found the writeup from last-year's winner () very helpful:
+
+Loss choice
+I noticed that the choice of loss got a lot of attention in the discussions. So I conducted some experiments and found that both CE and BCE/Focal losses could give me similar results when the learning rate and the number of epochs were well-tuned. However, CE gave me a bit better results, so I settled on it. I connect better results with CE (I might be wrong) with the following interconnected assumptions:
+
+The magnitude of updates with CE for each label depends on how well the positive labels (probability > 0) are classified. This means that if a rare positive label A gets a low probability, then the negative overrepresented label B(that has a higher probability than other negative labels) is pushed to zero with a stronger update.
+CE handles imbalanced labels better and avoids overfitting to overrepresented classes by punishing them when Softmax can not give a higher score for A because the overrepresented label B already got too high logits as a result of the previous numerous imbalanced updates when label B was positive.
+Also, I didn’t normalize sample labels to sum to one, motivated by the idea that more difficult samples (those with more positive labels) should have a greater impact on the loss.
+
+
+5 dataset observations in the 2026 Pantanal Data
+Hey everyone,
+
+I have just joined this competition.
+
+I put together this map to show how these files actually link up. Note the dashed line—that’s the "missing link" for our 28 ghost species. Dataset Ecosystem
+
+I’ve been digging through the raw files for the new BirdCLEF+ project, and there are some really interesting structural patterns that aren't immediately obvious from the competition's high-level description. If you're building a pipeline based on previous years, you might want to check these 5 quirks first—they change the game for how we think about the "training" phase.
+
+** 1. The "Invisible 28" (Zero Focal Audio) ** The biggest surprise is that 28 of our target classes have zero clean audio clips in train_audio. This includes all 25 Insect Sonotypes and 3 specific Amphibians.
+
+** 2. The Soundscape "Double-Vision" ** If you’re validating on the train_soundscapes_labels.csv, watch out: the file contains 1,478 rows but only 739 unique segments. Every single labeled row is duplicated exactly twice.
+
+** 3. The Taxonomic Skew (98% Birds) ** We all knew birds would be common, but the clip-level training is almost entirely Aves (Birds account for 97.9% of the focal clips).
+
+However, in the environmental soundscapes, the dominance flips. Labeled activity is actually concentrated in Amphibia (4,174 mentions) and Insecta (1,136), with Birds trailing at 824.
+
+** 4. Sonotypes aren't Species ** It’s important to remember that most insect targets are Sonotypes, not species-level IDs. These are defined purely by their acoustic signature (rhythmic pulses, frequency bands).
+
+** 5. Spatial and Temporal Metadata Exists in Both Training Modalities ** The dataset includes spatial and temporal context in both forms of training data, but in different ways. In train.csv, clip-level recordings include explicit latitude and longitude columns. In train_soundscapes/, filenames encode site, date, and UTC time, and train_soundscapes_labels.csv links labels to those soundscape files.
+
+Good luck in the Pantanal!
+
+ps. I will try to add new information I discover, to the same thread, but please guide where I have gone wrong
+
+
+6
+8 Comments
+Hotness
+ 
+Comment here. Be patient, be friendly, and focus on ideas. We're all here to learn and improve!
+This comment will be made public once posted.
+
+
+Post Comment
+OpPrime
+Topic Author
+Posted 21 days ago
+
+· 559th in this Competition
+
+additions 3, hidden granularity issue for ghosts:
+
+The 984 ghost rows are spread over only 43 unique SC files and 246 unique (file, window) pairs. Many ghost rows share the same (file, window) — they're the same labelled window appearing under different primary_species entries because the SC window is multi-labelled.
+
+Implication: the train/val split for ghost rows is at file granularity → effectively a 43-file split (~30 train / ~13 val). For tail species like 47158son05, a single file ending up on the wrong side of the split can zero out one side.
+
+I think for those of us careful about species representation on train and validation side, this is a very important factor to consider.
+
+
+Reply
+
+React
+OpPrime
+Topic Author
+Posted 24 days ago
+
+· 559th in this Competition
+
+a number 6 for my list:
+
+The 66 labeled soundscape files cover only 9 unique sites. Because multiple labeled files exist per site, random file-level or row-level splitting will leak site information between train and validation and can inflate local AUC. Use site-aware splits, or at minimum file-aware splits that prevent shared sites across train and validation.
+
+Reply
+
+React
+hengck23
+Posted 2 months ago
+
+· 1771st in this Competition
+
+Sonotypes perch embeddings
+
+
+
+
+Reply
+
+2
+OpPrime
+Topic Author
+Posted 2 months ago
+
+· 559th in this Competition
+
+this is great work buddy, btw, I am a big fan and have you used your notebooks in the past.
+
+
+Reply
+
+React
+OpPrime
+Topic Author
+Posted 2 months ago
+
+· 559th in this Competition
+
+any my version of insecta and amphibia:
+
+Amphibia PCA
+
+Insecta PCA
+
+
+Reply
+
+React
+Durga Kumari
+Posted 2 months ago
+
+This is really helpful, especially the “Invisible 28” point and didn’t realize that many classes have zero focal audio. Thanks for summarizing this so clearly.
+
+
+Reply
+
+1
+OpPrime
+Topic Author
+Posted 21 days ago
+
+· 559th in this Competition
+
+A further addition to the data discovery post, I mapped clips' lon/lat and time to soundscapes labelled, and 47 species in clips have direct matching site x hour soundscape. Also if you map clips site x hour to soundscapes site x hour, you find 123 matching cases.
