@@ -85,9 +85,11 @@ Always return:
 
 ## What We've Ruled Out
 - **Site×Hour prior at inference**: -0.083 LB (0.873→0.790). Training SS cover 9 sites; test sites differ. Global fallback zeros 159/234 classes. DO NOT USE.
+- **Ghost species LogReg correction**: -0.010 LB (0.949→0.939). OOF AUC≈1.0 was a trap — LogReg memorized site-level Perch features, not species acoustics. Training SS sites ≠ test sites → predictions are pure noise on new sites. DO NOT USE.
 - **50/50 Perch+EfficientNet ensemble**: -0.019 LB (0.873→0.854). EfficientNet (~0.833 est.) too weak to help; drags Perch down.
 - **EoS 80% + ProtoSSM 20% blend**: -0.001 LB (0.949→0.948). 0.005 gap too large — ProtoSSM adds noise. Rule: only blend models within ~0.002–0.003 of each other.
 - **ProtoSSM parameter tuning** (power, gate, adaptive weights): confirmed 0.944 ceiling — no path to gain.
+- **correction_weight=0.10 in our ProtoSSM**: -0.001 LB (0.944→0.943). EoS's 0.10 is specific to its full postprocessing chain; our pipeline optimum is ~0.35.
 - Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
 - Bigger backbone (phase 3 B2): higher clip CV = more overfitting = worse LB
 - Mixup augmentation: hurts CV and LB
