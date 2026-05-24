@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 ## BirdCLEF 2026 — Current Phase
-Phase 5 (inference stacking + ensemble). Current best: **0.949 LB** (EoS ProtoSSM pipeline).
-Current goal: push past 0.949 via multi-model blending and architectural diversity.
+Phase 5 (EoS postprocessing tuning). Current best: **0.949 LB** (EoS exp019: lambda_prior=0.5, rank_aware_scaling.power=0.6).
+Current goal: push past 0.949 via single-scalar EoS postprocessing probes.
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
@@ -37,9 +37,11 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 3. [DONE] ProtoSSM v2 (power/gate tuning) → 0.944 LB (no gain — ceiling hit)
 4. [DONE] EoS pipeline (correction_weight=0.10) → **0.949 LB** ← current best
 5. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
-6. [NEXT] Find public kernel ≥0.947 with different architecture for blending
-7. [NEXT] OR tune EoS directly (lambda_prior, correction_weight single-scalar probes)
-8. Target: 0.950+ (top 200 gold medal)
+6. [DONE] exp017: lambda_prior 0.4→0.5 → 0.949 (stacked into exp019)
+7. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → **0.949** (confirmed)
+8. [NEXT] exp020: file_confidence_scale.power 0.4→0.5 (single-scalar probe)
+9. [NEXT] exp021: adaptive_delta_smooth.base_alpha 0.20→0.25 or 0.15 (next dial)
+10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
 - Data/validation fixes before fancy models
@@ -78,10 +80,21 @@ Always return:
 4. [DONE] ProtoSSM v2 (adaptive weights, power=0.5) — LB 0.944 (no gain)
 5. [DONE] EoS pipeline (ONNX Perch, correction_weight=0.10) — LB **0.949**
 6. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
-7. [NEXT] Find public kernel ≥0.947 with different architecture for blending
-8. [NEXT] OR tune EoS directly (lambda_prior, correction_weight single-scalar probes)
-9. [NEXT] Zero-clip class strategy for 28 insect/amphibian ghost species
-9. [FUTURE] Fine-tuned Perch head with SS-aware training
+7. [DONE] exp017: lambda_prior 0.4→0.5 (stacked into exp019)
+8. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → LB **0.949** confirmed
+9. [NEXT] exp020: file_confidence_scale.power 0.4→0.5
+10. [NEXT] exp021: adaptive_delta_smooth.base_alpha probe (0.15 or 0.25)
+11. [FUTURE] Find public kernel ≥0.947 with different architecture for blending
+12. [FUTURE] Fine-tuned Perch head with SS-aware training
+
+## EoS Postprocessing Dial State (as of exp019)
+| Dial | Current | Tried | Status |
+|---|---|---|---|
+| `lambda_prior` | 0.5 | 0.4→0.5 | in exp019 baseline |
+| `rank_aware_scaling.power` | 0.6 | 0.5→0.6 | +0 confirmed (exp019) |
+| `file_confidence_scale.power` | 0.4 | — | **probe next (exp020)** |
+| `adaptive_delta_smooth.base_alpha` | 0.20 | — | probe after exp020 |
+| `file_confidence_scale.top_k` | 2 | — | low priority |
 
 ## What We've Ruled Out
 - **Site×Hour prior at inference**: -0.083 LB (0.873→0.790). Training SS cover 9 sites; test sites differ. Global fallback zeros 159/234 classes. DO NOT USE.
