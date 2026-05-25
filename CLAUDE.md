@@ -39,8 +39,9 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 5. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
 6. [DONE] exp017: lambda_prior 0.4→0.5 → 0.949 (stacked into exp019)
 7. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → **0.949** (confirmed)
-8. [NEXT] exp020: file_confidence_scale.power 0.4→0.5 (single-scalar probe)
-9. [NEXT] exp021: adaptive_delta_smooth.base_alpha 0.20→0.25 or 0.15 (next dial)
+8. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001, reversed)
+9. [NEXT] exp021: file_confidence_scale.power 0.4→0.3 (reverse direction)
+10. [NEXT] exp022: adaptive_delta_smooth.base_alpha probe (0.15 or 0.25)
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
@@ -82,8 +83,9 @@ Always return:
 6. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
 7. [DONE] exp017: lambda_prior 0.4→0.5 (stacked into exp019)
 8. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → LB **0.949** confirmed
-9. [NEXT] exp020: file_confidence_scale.power 0.4→0.5
-10. [NEXT] exp021: adaptive_delta_smooth.base_alpha probe (0.15 or 0.25)
+9. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001, reversed)
+10. [NEXT] exp021: file_confidence_scale.power 0.4→0.3
+11. [NEXT] exp022: adaptive_delta_smooth.base_alpha probe (0.15 or 0.25)
 11. [FUTURE] Find public kernel ≥0.947 with different architecture for blending
 12. [FUTURE] Fine-tuned Perch head with SS-aware training
 
@@ -92,8 +94,8 @@ Always return:
 |---|---|---|---|
 | `lambda_prior` | 0.5 | 0.4→0.5 | in exp019 baseline |
 | `rank_aware_scaling.power` | 0.6 | 0.5→0.6 | +0 confirmed (exp019) |
-| `file_confidence_scale.power` | 0.4 | — | **probe next (exp020)** |
-| `adaptive_delta_smooth.base_alpha` | 0.20 | — | probe after exp020 |
+| `file_confidence_scale.power` | 0.4 | 0.5→0.948 (-0.001) | **probe 0.3 next (exp021)** |
+| `adaptive_delta_smooth.base_alpha` | 0.20 | — | probe after exp021 |
 | `file_confidence_scale.top_k` | 2 | — | low priority |
 
 ## What We've Ruled Out
