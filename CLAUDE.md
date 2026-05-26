@@ -39,9 +39,10 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 5. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
 6. [DONE] exp017: lambda_prior 0.4→0.5 → 0.949 (stacked into exp019)
 7. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → **0.949** (confirmed)
-8. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001, reversed)
-9. [NEXT] exp021: file_confidence_scale.power 0.4→0.3 (reverse direction)
-10. [NEXT] exp022: adaptive_delta_smooth.base_alpha probe (0.15 or 0.25)
+8. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001)
+9. [DONE] exp021: file_confidence_scale.power 0.4→0.3 → 0.948 (-0.001, dial exhausted at 0.4)
+10. [NEXT] exp022: adaptive_delta_smooth.base_alpha 0.20→0.25 (last untouched dial)
+11. [NEXT] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15 (if 0.25 hurts)
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
@@ -83,9 +84,10 @@ Always return:
 6. [DONE] EoS 80% + ProtoSSM 20% blend → 0.948 (hurt -0.001, ruled out)
 7. [DONE] exp017: lambda_prior 0.4→0.5 (stacked into exp019)
 8. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → LB **0.949** confirmed
-9. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001, reversed)
-10. [NEXT] exp021: file_confidence_scale.power 0.4→0.3
-11. [NEXT] exp022: adaptive_delta_smooth.base_alpha probe (0.15 or 0.25)
+9. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001)
+10. [DONE] exp021: file_confidence_scale.power 0.4→0.3 → 0.948 (-0.001, dial exhausted at 0.4)
+11. [NEXT] exp022: adaptive_delta_smooth.base_alpha 0.20→0.25
+12. [NEXT] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15 (if 0.25 hurts)
 11. [FUTURE] Find public kernel ≥0.947 with different architecture for blending
 12. [FUTURE] Fine-tuned Perch head with SS-aware training
 
@@ -94,8 +96,8 @@ Always return:
 |---|---|---|---|
 | `lambda_prior` | 0.5 | 0.4→0.5 | in exp019 baseline |
 | `rank_aware_scaling.power` | 0.6 | 0.5→0.6 | +0 confirmed (exp019) |
-| `file_confidence_scale.power` | 0.4 | 0.5→0.948 (-0.001) | **probe 0.3 next (exp021)** |
-| `adaptive_delta_smooth.base_alpha` | 0.20 | — | probe after exp021 |
+| `file_confidence_scale.power` | 0.4 | 0.3→0.948, 0.5→0.948 | exhausted at 0.4 |
+| `adaptive_delta_smooth.base_alpha` | 0.20 | — | **probe 0.25 next (exp022)** |
 | `file_confidence_scale.top_k` | 2 | — | low priority |
 
 ## What We've Ruled Out
