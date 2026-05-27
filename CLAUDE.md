@@ -41,8 +41,9 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 7. [DONE] exp019: rank_aware_scaling.power 0.5→0.6 → **0.949** (confirmed)
 8. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001)
 9. [DONE] exp021: file_confidence_scale.power 0.4→0.3 → 0.948 (-0.001, dial exhausted at 0.4)
-10. [NEXT] exp022: adaptive_delta_smooth.base_alpha 0.20→0.25 (last untouched dial)
-11. [NEXT] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15 (if 0.25 hurts)
+10. [DONE] exp022: adaptive_delta_smooth.base_alpha 0.20→0.25 → 0.948 (-0.001, reversed)
+11. [NEXT] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15
+12. [NEXT] If 0.15 also hurts → all dials exhausted; pivot to architectural diversity
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
@@ -97,7 +98,7 @@ Always return:
 | `lambda_prior` | 0.5 | 0.4→0.5 | in exp019 baseline |
 | `rank_aware_scaling.power` | 0.6 | 0.5→0.6 | +0 confirmed (exp019) |
 | `file_confidence_scale.power` | 0.4 | 0.3→0.948, 0.5→0.948 | exhausted at 0.4 |
-| `adaptive_delta_smooth.base_alpha` | 0.20 | — | **probe 0.25 next (exp022)** |
+| `adaptive_delta_smooth.base_alpha` | 0.20 | 0.25→0.948 (-0.001) | **probe 0.15 next (exp023)** |
 | `file_confidence_scale.top_k` | 2 | — | low priority |
 
 ## What We've Ruled Out
