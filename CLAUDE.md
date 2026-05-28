@@ -1,8 +1,9 @@
 # CLAUDE.md
 
 ## BirdCLEF 2026 — Current Phase
-Phase 5 (EoS postprocessing tuning). Current best: **0.949 LB** (EoS exp019: lambda_prior=0.5, rank_aware_scaling.power=0.6).
-Current goal: push past 0.949 via single-scalar EoS postprocessing probes.
+Phase 6 (architectural diversity / second model search). Current best: **0.949 LB** (EoS exp019).
+EoS single-model tuning ceiling confirmed at 0.949 — all postprocessing dials exhausted.
+Current goal: find a second competitive model (≥0.947) with a different architecture to blend.
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
@@ -42,8 +43,8 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 8. [DONE] exp020: file_confidence_scale.power 0.4→0.5 → 0.948 (-0.001)
 9. [DONE] exp021: file_confidence_scale.power 0.4→0.3 → 0.948 (-0.001, dial exhausted at 0.4)
 10. [DONE] exp022: adaptive_delta_smooth.base_alpha 0.20→0.25 → 0.948 (-0.001, reversed)
-11. [NEXT] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15
-12. [NEXT] If 0.15 also hurts → all dials exhausted; pivot to architectural diversity
+11. [DONE] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15 → 0.948 (-0.001, dial exhausted at 0.20)
+12. [PIVOT] All EoS dials exhausted at 0.949 → now searching for 2nd model to blend
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
@@ -89,7 +90,7 @@ Always return:
 10. [DONE] exp021: file_confidence_scale.power 0.4→0.3 → 0.948 (-0.001, dial exhausted at 0.4)
 11. [NEXT] exp022: adaptive_delta_smooth.base_alpha 0.20→0.25
 12. [NEXT] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15 (if 0.25 hurts)
-11. [FUTURE] Find public kernel ≥0.947 with different architecture for blending
+11. [NEXT] Find public kernel ≥0.947 with different architecture for blending
 12. [FUTURE] Fine-tuned Perch head with SS-aware training
 
 ## EoS Postprocessing Dial State (as of exp019)
@@ -98,7 +99,7 @@ Always return:
 | `lambda_prior` | 0.5 | 0.4→0.5 | in exp019 baseline |
 | `rank_aware_scaling.power` | 0.6 | 0.5→0.6 | +0 confirmed (exp019) |
 | `file_confidence_scale.power` | 0.4 | 0.3→0.948, 0.5→0.948 | exhausted at 0.4 |
-| `adaptive_delta_smooth.base_alpha` | 0.20 | 0.25→0.948 (-0.001) | **probe 0.15 next (exp023)** |
+| `adaptive_delta_smooth.base_alpha` | 0.20 | 0.15→0.948, 0.25→0.948 | exhausted at 0.20 |
 | `file_confidence_scale.top_k` | 2 | — | low priority |
 
 ## What We've Ruled Out
@@ -106,6 +107,7 @@ Always return:
 - **Ghost species LogReg correction**: -0.010 LB (0.949→0.939). OOF AUC≈1.0 was a trap — LogReg memorized site-level Perch features, not species acoustics. Training SS sites ≠ test sites → predictions are pure noise on new sites. DO NOT USE.
 - **50/50 Perch+EfficientNet ensemble**: -0.019 LB (0.873→0.854). EfficientNet (~0.833 est.) too weak to help; drags Perch down.
 - **EoS 80% + ProtoSSM 20% blend**: -0.001 LB (0.949→0.948). 0.005 gap too large — ProtoSSM adds noise. Rule: only blend models within ~0.002–0.003 of each other.
+- **EoS postprocessing dial tuning** (exp020–023): all four dials exhausted — file_confidence_scale.power=0.4, rank_aware_scaling.power=0.6, adaptive_delta_smooth.base_alpha=0.20, lambda_prior=0.5 are confirmed optima. Single-model ceiling = 0.949.
 - **ProtoSSM parameter tuning** (power, gate, adaptive weights): confirmed 0.944 ceiling — no path to gain.
 - **correction_weight=0.10 in our ProtoSSM**: -0.001 LB (0.944→0.943). EoS's 0.10 is specific to its full postprocessing chain; our pipeline optimum is ~0.35.
 - Soundscape oversampling (phases 2/2b): hurts LB — training soundscapes ≠ test distribution
