@@ -46,7 +46,8 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 11. [DONE] exp023: adaptive_delta_smooth.base_alpha 0.20→0.15 → 0.948 (-0.001, dial exhausted at 0.20)
 12. [PIVOT] All EoS single-model dials exhausted at 0.949
 13. [DONE] Community scan: 0.950 found via lambda_prior=0.65 + rank_power=0.65 + f_TAX_SMOOTHING_POSTPROC
-14. [NEXT] kaggle_kernel_eos_tax: reproduce 0.950 (3 changes combined, kernel running)
+14. [DONE] kaggle_kernel_eos_tax: lambda_prior=0.65 + rank_power=0.65 + TAX_SMOOTHING → 0.949 (no gain on single model)
+15. [NEXT] kaggle_kernel_tax_blend: fork karnak_tax (Model_22+51+74 blend + TAX_SMOOTHING) → targeting 0.950
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
