@@ -47,7 +47,8 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 13. [DONE] Community scan: 0.950 found via lambda_prior=0.65 + rank_power=0.65 + f_TAX_SMOOTHING_POSTPROC
 14. [DONE] kaggle_kernel_eos_tax: lambda_prior=0.65 + rank_power=0.65 + TAX_SMOOTHING → 0.949 (no gain on single model)
 15. [DONE] kaggle_kernel_tax_blend: fork karnak_tax → **0.950 LB** ← current best
-16. [NEXT] kaggle_kernel_eos9: fork EoS.9 (weights 1.2%+2.1%+96.7%, swordsman proto_cont fix)
+16. [DONE] kaggle_kernel_eos9: fork EoS.9 → 0.950 (same ceiling, weight tweak made no difference)
+17. [NEXT] Look at newer community kernels (beicicc taxonomy-smoothed, ryutoyoda sidecar) for 0.951 path
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
