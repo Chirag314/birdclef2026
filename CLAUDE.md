@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 ## BirdCLEF 2026 — Current Phase
-Phase 7 (push past 0.950). Current best: **0.950+ LB** (birdnet_sidecar_v2: EoS.9 + BirdNET caps 0.025/0.090 — rank +250 above tax_blend within 0.950 tier).
-Current goal: finalize 2 submission slots for June 3rd deadline.
+Phase 7 — **LOCKED**. Final submissions selected 2026-05-31.
+SLOT 1: ref 53205912 birdnet_sidecar_v2 (0.950+, rank +250) | SLOT 2: ref 53126671 tax_blend v2 (diversity hedge).
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
