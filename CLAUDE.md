@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 ## BirdCLEF 2026 — Current Phase
-Phase 7 (push past 0.950). Current best: **0.950+ LB** (birdnet_sidecar: EoS.9 anchor + BirdNET v2.4 corrections — rank +200 above tax_blend within 0.950 tier).
-Current goal: hold position, finalize 2 submission slots for June 3rd deadline.
+Phase 7 (push past 0.950). Current best: **0.950+ LB** (birdnet_sidecar_v2: EoS.9 + BirdNET caps 0.025/0.090 — rank +250 above tax_blend within 0.950 tier).
+Current goal: finalize 2 submission slots for June 3rd deadline.
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
@@ -50,7 +50,8 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 16. [DONE] kaggle_kernel_eos9: fork EoS.9 → 0.950 (same ceiling, weight tweak made no difference)
 17. [DONE] Community scan: no public kernel claims >0.950 LB as of 2026-05-29
 18. [DONE] kaggle_kernel_pcen_sidecar: TIMED OUT (PCEN/ConvNeXt too slow for 90-min CPU limit)
-19. [DONE] kaggle_kernel_birdnet_sidecar: EoS.9 + BirdNET only → **0.950+ (rank +200 within tier)** ← new best
+19. [DONE] kaggle_kernel_birdnet_sidecar: EoS.9 + BirdNET (caps 0.015/0.060) → 0.950+ (rank +200)
+20. [DONE] kaggle_kernel_birdnet_sidecar_v2: BirdNET caps 0.025/0.090 → **0.950+ (rank +250)** ← current best
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
