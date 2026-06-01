@@ -52,6 +52,7 @@ Prioritize high-ROI experiments, realistic validation, and efficient repo inspec
 18. [DONE] kaggle_kernel_pcen_sidecar: TIMED OUT (PCEN/ConvNeXt too slow for 90-min CPU limit)
 19. [DONE] kaggle_kernel_birdnet_sidecar: EoS.9 + BirdNET (caps 0.015/0.060) → 0.950+ (rank +200)
 20. [DONE] kaggle_kernel_birdnet_sidecar_v2: BirdNET caps 0.025/0.090 → **0.950+ (rank +250)** ← current best
+21. [DONE] kaggle_kernel_birdnet_sidecar_v3: BirdNET caps 0.035/0.120 → 0.950 (no rank change, ceiling confirmed at v2)
 10. Target: 0.950+ (top 200 gold medal)
 
 ## Experiment Philosophy
