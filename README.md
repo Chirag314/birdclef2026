@@ -8,7 +8,20 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 
 ---
 
-## Current Status
+## ⚑ FINAL RESULTS — Competition ended 2026-06-03
+
+| Metric | Public LB | Private LB |
+|---|---|---|
+| Score | 0.950 | **0.941** |
+| Rank | 321 / 4,244 (top 7.6%) | ~880 / 4,244 (top 20.7%) |
+| Medal | Bronze (inside cutoff) | **No medal** |
+
+Selected submissions: `birdnet_sidecar_v2` (ref 53205912) + `tax_blend v2` (ref 53126671) — both 0.941 private.
+**Root cause of miss:** BirdNET correction caps overfit the 34% public test set. See `solutions_analysis.md`.
+
+---
+
+## Experiment Phases
 
 | Phase | Status | Notes |
 |---|---|---|
@@ -22,26 +35,32 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 | Phase 4 — Label smoothing (B0, 5-fold) | Done | LB=**0.833** |
 | Phase 5 — Perch MLP (5-fold) | Done | OOF 0.977, LB=**0.873** (+0.040) |
 | Phase 5 — ProtoSSM pipeline | Done | LB=**0.944** (+0.071) |
-| Phase 5 — EoS pipeline | Done | LB=**0.949** ← current best |
-| Phase 5 — EoS+ProtoSSM blend | Done | 0.948 — hurt -0.001, ruled out |
+| Phase 5 — EoS pipeline | Done | LB=**0.949** |
+| Phase 6 — EoS dial tuning (exp017–023) | Done | All dials exhausted at 0.949 |
+| Phase 6 — Tax blend (Model mix + TAX) | Done | LB=**0.950** |
+| Phase 6 — BirdNET sidecar v1/v2/v3 | Done | LB=**0.950** (private: 0.941, overfit) |
+| Phase 7 — FINAL | **Complete** | No medal — public/private gap 0.009 |
 
 ---
 
-## LB Scoreboard
+## Full LB Scoreboard
 
-| Experiment | Backbone | Folds | CV (clip) | Public LB |
-|---|---|---|---|---|
-| baseline_v1 | B0 | 5 | 0.9248 | — |
-| phase1a_bg_only | B0 | 5 | 0.9412 | 0.789 |
-| phase2_ss_aware | B0 | 1 | 0.8220 (SS holdout) | 0.756 |
-| phase2b_ss | B0 | 1 | 0.7883 (SS holdout) | 0.774 |
-| phase3_b2 | **B2** | 5 | 0.9590 avg | 0.753 |
-| phase4_ls | B0 | 5 | 0.929 avg | 0.833 |
-| Perch MLP | Perch v2 + MLP | 5 | OOF 0.977 | 0.873 |
-| ProtoSSM | Perch v2 + SSM | 5 | — | 0.944 |
-| ProtoSSM v2 | Perch v2 + SSM | 5 | — | 0.944 (no gain) |
-| EoS pipeline | Perch v2 + SSM | 5 | — | **0.949** ← current best |
-| EoS 80% + ProtoSSM 20% | blend | — | — | 0.948 ← hurt -0.001, ruled out |
+| Experiment | Public LB | Private LB | Notes |
+|---|---|---|---|
+| baseline_v1 (B0 5-fold) | — | — | CV 0.9248 |
+| phase1a_bg_noise | 0.789 | — | |
+| phase3_b2 | 0.753 | — | bigger = worse |
+| phase4_label_smooth | 0.833 | — | |
+| Perch MLP 5-fold | 0.873 | — | OOF 0.977 |
+| ProtoSSM | 0.944 | — | |
+| EoS pipeline | 0.949 | — | correction_weight=0.10 |
+| EoS 80% + ProtoSSM 20% | 0.948 | — | -0.001, ruled out |
+| EoS dial tuning (exp017–023) | 0.949 | — | ceiling confirmed |
+| Tax blend (eos9 + TAX_SMOOTH) | 0.950 | — | diversity hedge (slot 2) |
+| BirdNET sidecar v1 | 0.950 | — | rank +200 |
+| BirdNET sidecar v2 | **0.950** | **0.941** | rank +250, selected slot 1 |
+| BirdNET sidecar v3 | 0.950 | — | no gain over v2 |
+| **Final (best private)** | **0.950** | **0.941** | rank ~880, no medal |
 
 ---
 
@@ -156,14 +175,12 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ---
 
-## Next Steps
+## Lessons for BirdCLEF 2027
 
-1. ~~Phase 1: augmentation~~ Done — bg noise best (LB 0.789)
-2. ~~Phase 2: soundscape oversampling~~ Done — no improvement
-3. ~~Phase 3: B2 backbone~~ Done — worse (LB 0.753)
-4. ~~Phase 4: label smoothing 5-fold~~ Done — LB 0.833
-5. ~~Phase 5: Perch MLP~~ Done — LB 0.873
-6. ~~Phase 5: ProtoSSM~~ Done — LB 0.944
-7. ~~Phase 5: EoS pipeline~~ Done — LB **0.949** ← current best
-8. ~~EoS 80% + ProtoSSM 20% blend~~ Done — 0.948 (-0.001, ruled out; gap too large)
-9. **Next**: find public kernel ≥0.947 with different architecture, or tune EoS directly
+1. **Never tune postprocessing against the public test set.** BirdNET correction caps dialled to 4-decimal public precision cost ~400 private ranks.
+2. **Diversity of model architectures matters more than single-model dial tuning.** Top teams used Perch + distilled SED + custom CNN — we stayed on Perch the whole time.
+3. **Pseudo-labeling on soundscapes is the unlock.** Nikita Babych (2025 + 2026 winner) built on noisy student self-training. We never attempted it.
+4. **OOF validation > public LB sniping.** Tune postprocessing on OOF predictions, not LB scores.
+5. **Domain shift is real and large.** Train-test gap confirmed: focal clips (global iNat/XC) vs Pantanal soundscapes. Soundscape-aware training + pseudo-labels on test-domain audio is the structural fix.
+
+See `solutions_analysis.md` for detailed comparison with medal solutions.

@@ -1,8 +1,20 @@
 # CLAUDE.md
 
-## BirdCLEF 2026 — Current Phase
-Phase 7 — **LOCKED**. Final submissions selected 2026-05-31.
-SLOT 1: ref 53205912 birdnet_sidecar_v2 (0.950+, rank +250) | SLOT 2: ref 53126671 tax_blend v2 (diversity hedge).
+## BirdCLEF 2026 — COMPETITION COMPLETE
+Phase 7 — **FINAL RESULTS IN**. Competition ended 2026-06-03.
+
+| | Public LB | Private LB |
+|---|---|---|
+| Score | 0.950 (rank 321/4244, top 7.6%) | **0.941** |
+| Rank | 321 | **~880** (est.) |
+| Medal | Bronze (inside cutoff) | **No medal** (outside top 10%) |
+
+SLOT 1: ref 53205912 birdnet_sidecar_v2 → private 0.941
+SLOT 2: ref 53126671 tax_blend v2 → private 0.941
+
+**Why we missed bronze:** BirdNET correction caps tuned to 4-decimal precision on 34% public test data overfit that distribution. On 66% private data (different Pantanal sites/seasons), the corrections added noise. Top teams used pseudo-labeling + multi-model diversity with conservative OOF-tuned postprocessing. See `solutions_analysis.md` for full post-mortem.
+
+**1st place:** Nikita Babych — private 0.965 (also won BirdCLEF 2025)
 
 ## Main Objective
 Help me work like a serious Kaggle competitor under token limits.
