@@ -6,7 +6,7 @@ Phase 7 — **FINAL RESULTS IN**. Competition ended 2026-06-03.
 | | Public LB | Private LB |
 |---|---|---|
 | Score | 0.950 (rank 321/4244, top 7.6%) | **0.941** |
-| Rank | 321 | **~880** (est.) |
+| Rank | 321 | **920** |
 | Medal | Bronze (inside cutoff) | **No medal** (outside top 10%) |
 
 SLOT 1: ref 53205912 birdnet_sidecar_v2 → private 0.941

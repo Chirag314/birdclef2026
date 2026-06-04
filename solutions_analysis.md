@@ -17,7 +17,7 @@
 | ~42 | Gold cutoff | 0.955 | ~0.955 |
 | ~212 | Silver cutoff | 0.951 | ~0.942 |
 | ~424 | **Bronze cutoff** | 0.950 | **~0.942** |
-| **~880** | **Chirag Desai (us)** | **0.950** | **0.941** |
+| **920** | **Chirag Desai (us)** | **0.950** | **0.941** |
 
 **Public→Private stability for top teams: ~0.002 drop.
 Our drop: 0.009 — 4.5× worse than the median.**
