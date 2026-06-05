@@ -12,8 +12,8 @@ Kaggle competition workspace — structured, reproducible, medal-focused.
 
 | Metric | Public LB | Private LB |
 |---|---|---|
-| Score | 0.950 | **0.941** |
-| Rank | 321 / 4,244 (top 7.6%) | 920 / 4,244 (top 20.7%) |
+| Score | 0.95097 | **0.94138** |
+| Rank | 293 / 4,085 (top 7.2%) | 865 / 4,085 (top 21.2%) |
 | Medal | Bronze (inside cutoff) | **No medal** |
 
 Selected submissions: `birdnet_sidecar_v2` (ref 53205912) + `tax_blend v2` (ref 53126671) — both 0.941 private.

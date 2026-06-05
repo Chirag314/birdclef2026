@@ -17,7 +17,7 @@
 | ~42 | Gold cutoff | 0.955 | ~0.955 |
 | ~212 | Silver cutoff | 0.951 | ~0.942 |
 | ~424 | **Bronze cutoff** | 0.950 | **~0.942** |
-| **920** | **Chirag Desai (us)** | **0.950** | **0.941** |
+| **865** | **Chirag Desai (us)** | **0.95097** | **0.94138** |
 
 **Public→Private stability for top teams: ~0.002 drop.
 Our drop: 0.009 — 4.5× worse than the median.**
@@ -152,7 +152,7 @@ Alternatively, one round of pseudo-labeling on training soundscapes (+~0.002–0
 
 ## Competition Context
 
-- **Total teams:** 4,244
+- **Total teams:** 4,085 (after leaderboard cleanup from 4,244)
 - **Public LB shakeup:** 918 teams tied at 0.950 → private range 0.930–0.948 (huge spread)
 - **Most common public→private drop:** ~0.002 for well-generalised models; 0.008–0.010 for tuned models
 - **Top-1 stability:** 0.967 → 0.965 (only 0.002 drop) — Nikita Babych's pseudo-labeling approach generalises extremely well
